@@ -106,7 +106,7 @@ router.delete("/delete", async (req, res) => {
 
 router.get("/listTree", async (req, res) => {
     
-    return res.status(200).send(JSON.stringify(DirectoryView.listFromPath(wwwroot), null, 2));
+    return res.status(200).send(JSON.stringify([DirectoryView.listFromPath(wwwroot)], null, 2));
 
 })
 
