@@ -10,6 +10,7 @@ const MIME_TYPES = {
   "application/pdf": "pdf",
   "video/mp4": "mp4",
   "audio/mp3": "mp3",
+  "application/javascript": "js",
   "application/json": "json",
   "application/xml": "xml",
   "text/plain": "txt",
@@ -54,7 +55,11 @@ const storage = multer.diskStorage({
   filename: (req, file, callback) => {
     const lastDot = file.originalname.lastIndexOf(".");
     const name = file.originalname.slice(0, lastDot).split(" ").join("_");
-    const extension = MIME_TYPES[file.mimetype];
+    const extensionFile = file.originalname.slice(lastDot);
+    const extension = MIME_TYPES[file.mimetype] || 
+                      (Object.values(MIME_TYPES).includes(extensionFile) 
+                              ? extensionFile 
+                              : "txt");
     callback(null, `${name}.${extension}`);
   },
 });
