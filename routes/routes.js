@@ -1,6 +1,8 @@
 import { Router } from "express";
 import { FileProcessor } from "../core/FileProcessor.js";
 import { FileStatus, RequestFile } from "../core/RequestFile.js";
+import { DirectoryView } from "../core/DirectoryView.js";
+import { wwwroot } from "../utils.js";
 
 export const router = Router();
 
@@ -99,6 +101,12 @@ router.delete("/delete", async (req, res) => {
     } catch (error) {
         res.status(500).send({message: "Error deleting file"});
     }
+
+})
+
+router.get("/listTree", async (req, res) => {
+    
+    return res.status(200).send(JSON.stringify(DirectoryView.listFromPath(wwwroot), null, 2));
 
 })
 
