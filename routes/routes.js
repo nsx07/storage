@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { fileProcessor } from "../core/fileProcessor.js";
+import { FileProcessor } from "../core/FileProcessor.js";
 import { FileStatus, RequestFile } from "../core/RequestFile.js";
 
 export const router = Router();
@@ -26,11 +26,11 @@ const prepareResponseFile = (request) => {
 
 }
 
-router.post("/save", fileProcessor, async (req, res) => {
+router.post("/save", FileProcessor, async (req, res) => {
     res.status(201).send(prepareResponseFile(req));
 })
 
-router.put("/update", fileProcessor, async (req, res) => {
+router.put("/update", FileProcessor, async (req, res) => {
     res.status(200).send(prepareResponseFile(req));
 })
 

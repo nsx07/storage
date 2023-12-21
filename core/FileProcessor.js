@@ -59,4 +59,4 @@ const storage = multer.diskStorage({
   },
 });
 
-export const fileProcessor = multer({ storage: storage }).array("file", 5);
+export const FileProcessor = multer({ storage: storage }).array("file", 5);
