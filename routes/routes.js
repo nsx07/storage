@@ -27,11 +27,17 @@ const prepareResponseFile = (request) => {
 }
 
 router.post("/save", FileProcessor, async (req, res) => {
-    res.status(201).send(prepareResponseFile(req));
+    if (req.file || req.files) {
+        return res.status(201).send(prepareResponseFile(req));
+    }
+    res.status(400).send({message: "File missing."})
 })
 
 router.put("/update", FileProcessor, async (req, res) => {
-    res.status(200).send(prepareResponseFile(req));
+    if (req.file || req.files) {
+        return res.status(200).send(prepareResponseFile(req));
+    }
+    res.status(400).send({message: "File missing."})
 })
 
 router.get("/get", async (req, res) => {
