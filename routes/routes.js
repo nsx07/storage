@@ -35,56 +35,64 @@ router.put("/update", FileProcessor, async (req, res) => {
 })
 
 router.get("/get", async (req, res) => {
-    const request = {
-        fileName: req.query.fileName,
-        projectName: req.query.projectName,
-        projectScope: req.query.projectScope
-    };
-
-    const fileRequest = new RequestFile(request.fileName, request.projectName, request.projectScope);
+    try {
+        const request = {
+            fileName: req.query.fileName,
+            projectName: req.query.projectName,
+            projectScope: req.query.projectScope
+        };
     
-    const result = await fileRequest.readFile();
-
-    if (result.status != FileStatus.SUCCESS) {
+        const fileRequest = new RequestFile(request.fileName, request.projectName, request.projectScope);
         
-        if (result.status === FileStatus.NOT_FOUND) {
-            return res.status(404).send({message: "File not found"});
+        const result = await fileRequest.readFile();
+    
+        if (result.status != FileStatus.SUCCESS) {
+            
+            if (result.status === FileStatus.NOT_FOUND) {
+                return res.status(404).send({message: "File not found"});
+            }
+            
+            return res.status(500).send({message: "Error saving file"});
         }
-        
-        return res.status(500).send({message: "Error saving file"});
+    
+        res.status(200).send(JSON.stringify({
+            fileName: fileRequest.fileName,
+            projectName: fileRequest.projectName,
+            projectScope: fileRequest.projectScope,
+            filePath: fileRequest.filePath,
+            data: result.data
+        }))
+    } catch (error) {
+        res.status(500).send({message: "Error getting file"});
     }
-
-    res.status(200).send(JSON.stringify({
-        fileName: fileRequest.fileName,
-        projectName: fileRequest.projectName,
-        projectScope: fileRequest.projectScope,
-        filePath: fileRequest.filePath,
-        data: result.data
-    }))
 })
 
 router.delete("/delete", async (req, res) => {
 
-    const request = req.body;
-    const fileRequest = new RequestFile(request.fileName, request.projectName, request.projectScope);
+    try {
+        const request = req.body;
+        const fileRequest = new RequestFile(request.fileName, request.projectName, request.projectScope);
+        
+        const result = await fileRequest.deleteFile();
     
-    const result = await fileRequest.deleteFile();
-
-    if (result.status != FileStatus.SUCCESS) {
-        
-        if (result.status === FileStatus.NOT_FOUND) {
-            return res.status(404).send({message: "File not found"});
+        if (result.status != FileStatus.SUCCESS) {
+            
+            if (result.status === FileStatus.NOT_FOUND) {
+                return res.status(404).send({message: "File not found"});
+            }
+            
+            return res.status(500).send({message: "Error deleting file"});
         }
-        
-        return res.status(500).send({message: "Error deleting file"});
+    
+        res.status(200).send(JSON.stringify({
+            fileName: fileRequest.fileName,
+            projectName: fileRequest.projectName,
+            projectScope: fileRequest.projectScope,
+            filePath: fileRequest.filePath,
+        }))
+    } catch (error) {
+        res.status(500).send({message: "Error deleting file"});
     }
-
-    res.status(200).send(JSON.stringify({
-        fileName: fileRequest.fileName,
-        projectName: fileRequest.projectName,
-        projectScope: fileRequest.projectScope,
-        filePath: fileRequest.filePath,
-    }))
 
 })
 
