@@ -3,9 +3,26 @@ import { FileProcessor } from "../core/FileProcessor.js";
 import { FileStatus, RequestFile } from "../core/RequestFile.js";
 import { DirectoryView } from "../core/DirectoryView.js";
 import { wwwroot } from "../utils.js";
+import swaggerUi from "swagger-ui-express";
+import swaggerJson from "../swagger.json" assert { type: "json" };
 
 export const router = Router();
 
+router.use('/docs', swaggerUi.serve);
+router.get('/docs', swaggerUi.setup(swaggerJson, { explorer: true }));
+
+/**
+ * Generates a response file object based on the given request.
+ *
+ * @param {Object} request - The request object.
+ * @param {Array} request.files - The array of files in the request.
+ * @param {Object} request.file - The file object in the request.
+ * @param {string} request.file.filename - The name of the file.
+ * @param {string} request.query.projectName - The name of the project.
+ * @param {string} request.query.projectScope - The scope of the project.
+ * @param {string} request.file.path - The file path.
+ * @return {Object|Array} - The response file object or array of response file objects.
+ */
 const prepareResponseFile = (request) => {
 
     if (request.files) {
@@ -28,6 +45,12 @@ const prepareResponseFile = (request) => {
 
 }
 
+/**
+ * Save file.
+ * @param {Object} request.file - The file object in the request.
+ * @param {string} request.query.projectName - The name of the project.
+ * @param {string} request.query.projectScope - The scope of the project.
+ */
 router.post("/save", FileProcessor, async (req, res) => {
     if (req.file || req.files) {
         return res.status(201).send(prepareResponseFile(req));
@@ -35,6 +58,13 @@ router.post("/save", FileProcessor, async (req, res) => {
     res.status(400).send({message: "File missing."})
 })
 
+/**
+ * Update file.
+ * @param {Object} request.file - The file object in the request.
+ * @param {string} request.query.projectName - The name of the project.
+ * @param {string} request.query.projectScope - The scope of the project.
+ * @param {string} request.query.oldFileName - The name of the file to update.
+ */
 router.put("/update", FileProcessor, async (req, res) => {
     if (req.file || req.files) {
         return res.status(200).send(prepareResponseFile(req));
@@ -42,6 +72,14 @@ router.put("/update", FileProcessor, async (req, res) => {
     res.status(400).send({message: "File missing."})
 })
 
+/**
+ * Get file information.
+ * 
+ * @param {string} fileName - The name of the file.
+ * @param {string} projectName - The name of the project.
+ * @param {string} projectScope - The scope of the project.
+ * @returns {object} The file information.
+ */
 router.get("/get", async (req, res) => {
     try {
         const request = {
@@ -71,10 +109,19 @@ router.get("/get", async (req, res) => {
             data: result.data
         }))
     } catch (error) {
+        console.log(error);
         res.status(500).send({message: "Error getting file"});
     }
 })
 
+/**
+ * Delete a file.
+ * 
+ * @param {string} fileName - The name of the file.
+ * @param {string} projectName - The name of the project.
+ * @param {string} projectScope - The scope of the project.
+ * @returns {object} The result of the deletion.
+ */
 router.delete("/delete", async (req, res) => {
 
     try {
@@ -99,11 +146,17 @@ router.delete("/delete", async (req, res) => {
             filePath: fileRequest.filePath,
         }))
     } catch (error) {
+        console.log(error);
         res.status(500).send({message: "Error deleting file"});
     }
 
 })
 
+/**
+ * Get the list of directories and files in a tree structure.
+ * 
+ * @returns {object} The list of directories and files.
+ */
 router.get("/listTree", async (req, res) => {
     
     return res.status(200).send(JSON.stringify([DirectoryView.listFromPath(wwwroot)], null, 2));

@@ -23,26 +23,6 @@ export class RequestFile {
         this.filePath = path.join(wwwroot, projectName, projectScope, fileName);
     }
 
-    async writeFile() {
-        return new Promise(async (resolve, reject) => {
-
-            await this.preparePath(this.projectName, this.projectScope);
-
-            fs.writeFile(this.filePath, this.blob, (err) => {
-                if (err) {
-                    
-                    if (["ENOENT", "ENOTDIR"].includes(err.code)) {
-                        return reject(ResponseFile.NOT_FOUND);
-                    }
-                    
-                    return reject(new ResponseFile(FileStatus.ERROR, null, err));
-
-                }
-                return resolve(ResponseFile.SUCCESS);
-            })
-        })
-    }
-
     async readFile() {
         return new Promise((resolve, reject) => {
             fs.readFile(this.filePath, (err, data) => {
@@ -69,8 +49,16 @@ export class RequestFile {
         return RequestFile.preparePath(this.projectName, this.projectScope);
     }
 
+    static validJoin(...args) {
+        return args.every(arg => !!arg);
+    }
+
     static async preparePath(projectName, projectScope) {
         return new Promise((resolve, reject) => {
+            if (!this.validJoin(projectName, projectScope)) {
+                return reject(new ResponseFile(FileStatus.ERROR, null, "Invalid projectName or projectScope"));
+            }
+
             const path_ = path.join(wwwroot, projectName, projectScope);
             fs.mkdir(path_, { recursive: true }, (err) => {
                 if (err) {

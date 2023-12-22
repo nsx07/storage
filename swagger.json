@@ -1,0 +1,286 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+      "version": "1.0.0",
+      "title": "Storage API",
+      "description": "Documentation for Storage API"
+    },
+    "paths": {
+      "/api/save": {
+        "post": {
+          "summary": "Save file",
+          "parameters": [
+            {
+              "name": "file",
+              "in": "formData",
+              "required": true,
+              "type": "file",
+              "description": "The file to be saved"
+            },
+            {
+              "name": "projectName",
+              "in": "query",
+              "required": true,
+              "type": "string",
+              "description": "The name of the project"
+            },
+            {
+              "name": "projectScope",
+              "in": "query",
+              "required": true,
+              "type": "string",
+              "description": "The scope of the project"
+            }
+          ],
+          "responses": {
+            "201": {
+              "description": "File saved successfully",
+              "content": {
+                "application/json": {
+                  "example": {
+                    "fileName": "example.txt",
+                    "projectName": "ExampleProject",
+                    "projectScope": "ExampleScope",
+                    "filePath": "/api/path/to/example.txt"
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Bad Request",
+              "content": {
+                "application/json": {
+                  "example": {
+                    "message": "File missing."
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/update": {
+        "put": {
+          "summary": "Update file",
+          "parameters": [
+            {
+              "name": "file",
+              "in": "formData",
+              "required": true,
+              "type": "file",
+              "description": "The file to be updated"
+            },
+            {
+              "name": "projectName",
+              "in": "query",
+              "required": true,
+              "type": "string",
+              "description": "The name of the project"
+            },
+            {
+              "name": "projectScope",
+              "in": "query",
+              "required": true,
+              "type": "string",
+              "description": "The scope of the project"
+            },
+            {
+              "name": "oldFileName",
+              "in": "query",
+              "required": true,
+              "type": "string",
+              "description": "The name of the file to update"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "File updated successfully",
+              "content": {
+                "application/json": {
+                  "example": {
+                    "fileName": "example.txt",
+                    "projectName": "ExampleProject",
+                    "projectScope": "ExampleScope",
+                    "filePath": "/api/path/to/example.txt"
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Bad Request",
+              "content": {
+                "application/json": {
+                  "example": {
+                    "message": "File missing."
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/get": {
+        "get": {
+          "summary": "Get file information",
+          "parameters": [
+            {
+              "name": "fileName",
+              "in": "query",
+              "required": true,
+              "type": "string",
+              "description": "The name of the file"
+            },
+            {
+              "name": "projectName",
+              "in": "query",
+              "required": true,
+              "type": "string",
+              "description": "The name of the project"
+            },
+            {
+              "name": "projectScope",
+              "in": "query",
+              "required": true,
+              "type": "string",
+              "description": "The scope of the project"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "File information retrieved successfully",
+              "content": {
+                "application/json": {
+                  "example": {
+                    "fileName": "example.txt",
+                    "projectName": "ExampleProject",
+                    "projectScope": "ExampleScope",
+                    "filePath": "/api/path/to/example.txt",
+                    "data": "File content or data"
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "File not found",
+              "content": {
+                "application/json": {
+                  "example": {
+                    "message": "File not found"
+                  }
+                }
+              }
+            },
+            "500": {
+              "description": "Internal Server Error",
+              "content": {
+                "application/json": {
+                  "example": {
+                    "message": "Error getting file"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/delete": {
+        "delete": {
+          "summary": "Delete a file",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "fileName": { 
+                      "description": "The name of the file",
+                      "type": "string"
+                    },
+                    "projectName": {
+                      "description": "The name of the project",
+                      "type": "string"
+                    },
+                    "projectScope": {
+                      "description": "The scope of the project",
+                      "type": "string"
+                    }
+                  },
+                  "required": ["status"] 
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "File deleted successfully",
+              "content": {
+                "application/json": {
+                  "example": {
+                    "fileName": "example.txt",
+                    "projectName": "ExampleProject",
+                    "projectScope": "ExampleScope",
+                    "filePath": "/api/path/to/example.txt"
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "File not found",
+              "content": {
+                "application/json": {
+                  "example": {
+                    "message": "File not found"
+                  }
+                }
+              }
+            },
+            "500": {
+              "description": "Internal Server Error",
+              "content": {
+                "application/json": {
+                  "example": {
+                    "message": "Error deleting file"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/listTree": {
+        "get": {
+          "summary": "Get the list of directories and files in a tree structure",
+          "responses": {
+            "200": {
+              "description": "List of directories and files retrieved successfully",
+              "content": {
+                "application/json": {
+                  "example": [
+                    {
+                      "name": "Directory 1",
+                      "type": "directory",
+                      "children": [
+                        {
+                          "name": "File 1.1",
+                          "type": "file"
+                        },
+                        {
+                          "name": "File 1.2",
+                          "type": "file"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "File 2",
+                      "type": "file"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  
