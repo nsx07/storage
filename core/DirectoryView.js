@@ -1,25 +1,6 @@
 import fs from "fs"
 import path from "path"
 
-export class Node {
-
-    name;
-    children;
-
-    constructor(name, children) {
-        this.name = name;
-        this.children = children;
-    }
-
-    append(name, children) {
-        if (!this.children) {
-            this.children = [];
-        }
-        this.children.push(new Node(name, children));
-    }
-
-}
-
 export class DirectoryView {
 
     static listFromPath(_path) {
@@ -33,11 +14,21 @@ export class DirectoryView {
                 return DirectoryView.listFromPath(newPath);
             });
 
-            return { type: 'folder', name: path.basename(_path), content: tree };
+            return { 
+                type: 'folder',
+                content: tree,
+                name: path.basename(_path),
+                path: DirectoryView.stripPath(_path),
+            };
         } else {
-            return { type: 'file', name: path.basename(_path) };
+            
+            return { type: 'file', path: DirectoryView.stripPath(_path), name: path.basename(_path), datetime: stat.mtime, size: stat.size };
         }
 
+    }
+
+    static stripPath(_path = "") {
+        return _path.slice(_path.indexOf("wwwroot")).replace("\\", "/");
     }
 
 

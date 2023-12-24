@@ -42,14 +42,19 @@ const methodHandler = {
 
 const storage = multer.diskStorage({
   destination: async (req, file, callback) => {
+    let path;
 
     try {
-        methodHandler[req.method](req);
-        let prepare = await RequestFile.preparePath(req.query.projectName, req.query.projectScope);
-        callback(null, prepare.path);
+      methodHandler[req.method](req);
+      const prepare = await RequestFile.preparePath(req.query.projectName, req.query.projectScope);
+      path = prepare.path;
     } catch (error) {
-        console.log(error)
+      req._destroy(error)
+
+      console.log(error)
     }
+
+    callback(null, path);
 
   },
   filename: (req, file, callback) => {
@@ -64,4 +69,14 @@ const storage = multer.diskStorage({
   },
 });
 
-export const FileProcessor = multer({ storage: storage }).array("file", 5);
+export const FileProcessor = multer({ storage: storage, fileFilter: (req, file, cb) => {
+  if (!req.query.projectName || !req.query.projectScope) {
+    return cb(new Error("Invalid projectName or projectScope"));
+  }
+
+  if (!RequestFile.validJoin(req.query.projectName, req.query.projectScope)) {
+    return cb(new Error("Invalid path! wwwroot is a reserved path"));
+  }
+
+  cb(null, true);
+} }).array("file", 5);

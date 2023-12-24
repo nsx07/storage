@@ -52,10 +52,14 @@ const prepareResponseFile = (request) => {
  * @param {string} request.query.projectScope - The scope of the project.
  */
 router.post("/save", FileProcessor, async (req, res) => {
-    if (req.file || req.files) {
-        return res.status(201).send(prepareResponseFile(req));
+    try {
+        if (req.file || req.files) {
+            return res.status(201).send(prepareResponseFile(req));
+        }
+        res.status(400).send({message: "File missing."})
+    } catch (error) {
+        res.status(400).send({message: error.message || "Error saving file"});
     }
-    res.status(400).send({message: "File missing."})
 })
 
 /**
@@ -66,10 +70,14 @@ router.post("/save", FileProcessor, async (req, res) => {
  * @param {string} request.query.oldFileName - The name of the file to update.
  */
 router.put("/update", FileProcessor, async (req, res) => {
-    if (req.file || req.files) {
-        return res.status(200).send(prepareResponseFile(req));
+    try {
+        if (req.file || req.files) {
+            return res.status(201).send(prepareResponseFile(req));
+        }
+        res.status(400).send({message: "File missing."})
+    } catch (error) {
+        res.status(400).send({message: error.message || "Error saving file"});
     }
-    res.status(400).send({message: "File missing."})
 })
 
 /**

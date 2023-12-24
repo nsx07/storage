@@ -50,6 +50,11 @@ export class RequestFile {
     }
 
     static validJoin(...args) {
+
+        if (args.some(a => a === "wwwroot")) {
+            return false;
+        }
+
         return args.every(arg => !!arg);
     }
 
