@@ -28,19 +28,21 @@ const prepareResponseFile = (request) => {
     if (request.files) {
         return request.files.map(file => {
             return {
+                size : file.size,
                 fileName: file.filename,
                 projectName: request.query.projectName,
                 projectScope: request.query.projectScope,
-                filePath: file.path
+                filePath: "wwwroot" + file.path.split(wwwroot).join("").replace(/\//g, "/")
             }
         })
     }
 
     return {
+        size: request.file.size,
         fileName: request.file.filename,
         projectName: request.query.projectName,
         projectScope: request.query.projectScope,
-        filePath: request.file.path
+        filePath: "wwwroot" + file.path.split(wwwroot).join("").replace(/\//g, "/")
     }
 
 }

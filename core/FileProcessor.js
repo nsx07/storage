@@ -70,13 +70,13 @@ const storage = multer.diskStorage({
 });
 
 export const FileProcessor = multer({ storage: storage, fileFilter: (req, file, cb) => {
-  if (!req.query.projectName || !req.query.projectScope) {
-    return cb(new Error("Invalid projectName or projectScope"));
+  if (!req.query.projectName) {
+    return cb(new Error("Invalid projectName"));
   }
 
-  if (!RequestFile.validJoin(req.query.projectName, req.query.projectScope)) {
-    return cb(new Error("Invalid path! wwwroot is a reserved path"));
-  }
+  // if (!RequestFile.validJoin(req.query.projectName, req.query.projectScope)) {
+  //   return cb(new Error("Invalid path! wwwroot is a reserved path"));
+  // }
 
   cb(null, true);
 } }).array("file", 5);
