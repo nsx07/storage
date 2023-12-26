@@ -36,7 +36,7 @@ export class RequestFile {
 
                 }
 
-                return resolve(new ResponseFile(FileStatus.SUCCESS, data, err));
+                return resolve(new ResponseFile(FileStatus.SUCCESS, data.toString("base64"), err));
             })
         })
     }
