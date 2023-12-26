@@ -1,4 +1,5 @@
 import path from 'path';
+import process from 'process';
 import { fileURLToPath } from 'url';
 
 var __filename = fileURLToPath(import.meta.url);
@@ -28,7 +29,7 @@ export const prepareResponseFile = (request) => {
                 fileName: file.filename,
                 projectName: request.query.projectName,
                 projectScope: request.query.projectScope,
-                filePath: file.path
+                filePath: stripPath(file.path)
             }
         })
     }
@@ -37,7 +38,45 @@ export const prepareResponseFile = (request) => {
         fileName: request.file.filename,
         projectName: request.query.projectName,
         projectScope: request.query.projectScope,
-        filePath: request.file.path
+        filePath: stripPath(request.file.path)
     }
 
+}
+
+export function stripPath(_path = "") {
+    return _path.slice(_path.indexOf("wwwroot") + 7).replaceAll(/[\/\\]+/g, "/");
+}
+
+
+export function convertObjectUrlParsed(obj) { 
+    let url = wwwroot;
+
+    if (obj.projectName) {
+        url += `/${obj.projectName}`;
+    }
+
+    if (obj.projectScope) {
+        url += `/${obj.projectScope}`;
+    }
+
+    if (obj.fileName) {
+        url += `/${obj.fileName}`;
+    }
+
+    // check platform UNIX OR POSIX 
+    return url.replaceAll(/[\/\\]+/g, "/");
+}
+
+export function convertUrlParsedObject(url) {
+    let urlParsed = url.split("/").filter((value) => value != "");
+    
+    let projectName = urlParsed[0];
+    let fileName = urlParsed[urlParsed.length - 1];
+    let projectScope = urlParsed.slice(1, urlParsed.length - 1).join("/");
+    
+    if (urlParsed.length <= 2) {
+        projectScope = "";
+    }
+
+    return { projectName, projectScope, fileName };
 }

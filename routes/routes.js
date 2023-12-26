@@ -1,11 +1,11 @@
 import { Router } from "express";
-import { FileProcessor } from "../core/FileProcessor.js";
-import { FileStatus, RequestFile } from "../core/RequestFile.js";
-import { DirectoryView } from "../core/DirectoryView.js";
-import { wwwroot, prepareResponseFile } from "../utils.js";
 import swaggerUi from "swagger-ui-express";
-import swaggerJson from "../swagger.json" assert { type: "json" };
 import { FileService } from "../services/FileService.js";
+import { FileProcessor } from "../core/FileProcessor.js";
+import { DirectoryView } from "../core/DirectoryView.js";
+import { wwwroot, prepareResponseFile, convertObjectUrlParsed } from "../utils.js";
+import { FileStatus, RequestFile } from "../core/RequestFile.js";
+import swaggerJson from "../swagger.json" assert { type: "json" };
 
 export const router = Router();
 const fservice = new FileService(wwwroot);
@@ -164,7 +164,10 @@ router.delete("/deleteDirectory", async (req, res) => {
     try {
         const body = req.body;
 
-        const result = await fservice.deleteDirectory(body.path);
+        console.log(convertObjectUrlParsed(body));
+        const result = await fservice.deleteDirectory(convertObjectUrlParsed(body));
+
+        console.log(result);
 
         if (result.status != FileStatus.SUCCESS) {
             return res.status(500).send({message: "Error deleting directory"});

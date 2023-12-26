@@ -11,7 +11,7 @@ export class FileService {
         this.path = path;
     }
 
-    static async createFile(filePath, data) {
+    async createFile(filePath, data) {
         
         return new Promise((resolve, reject) => {
             fs.writeFile(filePath, data, (err) => {
@@ -24,7 +24,7 @@ export class FileService {
         })
     }
 
-    static async deleteFile(filePath) {
+    async deleteFile(filePath) {
         return new Promise((resolve, reject) => {
             
             if (!fs.existsSync(filePath)) {
@@ -50,7 +50,7 @@ export class FileService {
         })
     }	
 
-    static async createDirectory(directoryPath) {
+    async createDirectory(directoryPath) {
         return new Promise((resolve, reject) => {
             fs.mkdir(directoryPath, (err) => {
                 if (err) {
@@ -62,7 +62,7 @@ export class FileService {
         })
     }
 
-    static async deleteDirectory(directoryPath, force = false) {
+    async deleteDirectory(directoryPath, force = false) {
         return new Promise((resolve, reject) => {
             
             if (!fs.existsSync(directoryPath)) 
@@ -78,7 +78,7 @@ export class FileService {
         })
     }
 
-    static async rename(oldPath, newPath) {
+    async rename(oldPath, newPath) {
         return new Promise((resolve, reject) => {
             
             if (!fs.existsSync(oldPath)) 
@@ -94,7 +94,7 @@ export class FileService {
         })
     }
 
-    static async copyFile(oldPath, newPath) {
+    async copyFile(oldPath, newPath) {
         return new Promise((resolve, reject) => {
             
             if (!fs.existsSync(oldPath)) 
@@ -110,7 +110,7 @@ export class FileService {
         })
     }
 
-    static async copyDirectory(oldPath, newPath) {
+    async copyDirectory(oldPath, newPath) {
         return new Promise((resolve, reject) => {
             var readStream = fs.createReadStream(oldPath);
             var writeStream = fs.createWriteStream(newPath);
@@ -129,7 +129,7 @@ export class FileService {
         })
     }
 
-    static async moveFile(oldPath, newPath) {
+    async moveFile(oldPath, newPath) {
         return new Promise((resolve, reject) => {
             
             if (!fs.existsSync(oldPath)) 
@@ -145,7 +145,7 @@ export class FileService {
         })
     }
 
-    static async moveDirectory(oldPath, newPath) {
+    async moveDirectory(oldPath, newPath) {
         return new Promise((resolve, reject) => {
             reject("Not implemented")
         })

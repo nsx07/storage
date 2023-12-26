@@ -1,5 +1,6 @@
 import fs from "fs"
 import path from "path"
+import { stripPath } from "../utils.js";
 
 export class DirectoryView {
 
@@ -18,18 +19,13 @@ export class DirectoryView {
                 type: 'folder',
                 content: tree,
                 name: path.basename(_path),
-                path: DirectoryView.stripPath(_path),
+                path: stripPath(_path),
             };
         } else {
             
-            return { type: 'file', path: DirectoryView.stripPath(_path), name: path.basename(_path), datetime: stat.mtime, size: stat.size };
+            return { type: 'file', path: stripPath(_path), name: path.basename(_path), datetime: stat.mtime, size: stat.size };
         }
 
     }
-
-    static stripPath(_path = "") {
-        return _path.slice(_path.indexOf("wwwroot")).replace("\\", "/");
-    }
-
 
 }
