@@ -55,16 +55,16 @@ export class RequestFile {
             return false;
         }
 
-        return args.every(arg => !!arg);
+        return args.some(arg => arg instanceof String);
     }
 
     static async preparePath(projectName, projectScope) {
         return new Promise((resolve, reject) => {
             if (!this.validJoin(projectName, projectScope)) {
-                return reject(new ResponseFile(FileStatus.ERROR, null, "Invalid projectName or projectScope"));
+                //return reject(new ResponseFile(FileStatus.ERROR, null, "Invalid projectName"));
             }
 
-            const path_ = path.join(wwwroot, projectName, projectScope);
+            const path_ = path.join([wwwroot, projectName, projectScope].filter(a => a && a != " ").join("/"));
             fs.mkdir(path_, { recursive: true }, (err) => {
                 if (err) {
                     reject(new ResponseFile(FileStatus.ERROR, null, err));
