@@ -62,7 +62,7 @@ export class FileService {
         })
     }
 
-    async deleteDirectory(directoryPath, force = false) {
+    async deleteDirectory(directoryPath, force = true) {
         return new Promise((resolve, reject) => {
             
             if (!fs.existsSync(directoryPath)) 

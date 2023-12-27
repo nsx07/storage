@@ -3,7 +3,7 @@ import swaggerUi from "swagger-ui-express";
 import { FileService } from "../services/FileService.js";
 import { FileProcessor } from "../core/FileProcessor.js";
 import { DirectoryView } from "../core/DirectoryView.js";
-import { wwwroot, prepareResponseFile, convertObjectUrlParsed } from "../utils.js";
+import { wwwroot, prepareResponseFile, convertObjectUrlParsed, parsePlatformPath, parsePlatformPathWithRoot } from "../utils.js";
 import { FileStatus, RequestFile } from "../core/RequestFile.js";
 import swaggerJson from "../swagger.json" assert { type: "json" };
 
@@ -102,6 +102,7 @@ router.delete("/delete", async (req, res) => {
 
     try {
         const request = req.body;
+        console.log(request);
         const fileRequest = new RequestFile(request.fileName, request.projectName, request.projectScope);
         
         const result = await fileRequest.deleteFile();
@@ -143,7 +144,7 @@ router.post("/createDirectory", async (req, res) => {
     try {
         const body = req.body;
 
-        const result = await fservice.createDirectory(body.path);
+        const result = await fservice.createDirectory(wwwroot + body.path);
 
         if (result.status != FileStatus.SUCCESS) {
             return res.status(500).send({message: "Error creating directory"});
@@ -184,11 +185,14 @@ router.delete("/deleteDirectory", async (req, res) => {
     }
 })
 
-router.patch("/renameDirectory", async (req, res) => {
+router.patch("/rename", async (req, res) => {
     try {
         const body = req.body;
 
-        const result = await fservice.rename(body.oldPath, body.newPath);
+        const result = await fservice.rename(
+            parsePlatformPathWithRoot(body.oldPath), 
+            parsePlatformPathWithRoot(body.newPath)
+        );
 
         if (result.status != FileStatus.SUCCESS) {
             return res.status(500).send({message: "Error renaming directory"});

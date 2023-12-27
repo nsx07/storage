@@ -44,9 +44,8 @@ export const prepareResponseFile = (request) => {
 }
 
 export function stripPath(_path = "") {
-    return _path.slice(_path.indexOf("wwwroot") + 7).replaceAll(/[\/\\]+/g, "/");
+    return parsePlatformPath(_path.slice(_path.indexOf("wwwroot") + 7));
 }
-
 
 export function convertObjectUrlParsed(obj) { 
     let url = wwwroot;
@@ -59,24 +58,41 @@ export function convertObjectUrlParsed(obj) {
         url += `/${obj.projectScope}`;
     }
 
-    if (obj.fileName) {
+    if (obj.fileName && obj.fileName.includes(".")) {
         url += `/${obj.fileName}`;
     }
 
     // check platform UNIX OR POSIX 
-    return url.replaceAll(/[\/\\]+/g, "/");
+    return parsePlatformPath(url);
 }
 
 export function convertUrlParsedObject(url) {
     let urlParsed = url.split("/").filter((value) => value != "");
     
-    let projectName = urlParsed[0];
-    let fileName = urlParsed[urlParsed.length - 1];
-    let projectScope = urlParsed.slice(1, urlParsed.length - 1).join("/");
+    let projectName = parsePlatformPath(urlParsed[0]);
+    let fileName = parsePlatformPath(urlParsed[urlParsed.length - 1]);
+    let projectScope = parsePlatformPath(urlParsed.slice(1, urlParsed.length - 1).join("/"));
     
     if (urlParsed.length <= 2) {
         projectScope = "";
     }
 
     return { projectName, projectScope, fileName };
+}
+
+export function parsePlatformPath(path) {
+    const reg = new RegExp(`[\/\\\\]+`, "g");
+    if (detectPlatform() == "win32") {
+        return path.replaceAll(reg, "\\");
+    } else {
+        return path.replaceAll(reg, "/");
+    }
+}
+
+export function parsePlatformPathWithRoot(path) {
+    return parsePlatformPath(wwwroot + "/" + path);
+}
+
+export function detectPlatform() {
+    return process.platform;
 }

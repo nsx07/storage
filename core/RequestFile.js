@@ -21,6 +21,7 @@ export class RequestFile {
         this.projectScope = projectScope;
 
         this.filePath = path.join(wwwroot, projectName, projectScope, fileName);
+        console.log(this.filePath);
     }
 
     async readFile() {
