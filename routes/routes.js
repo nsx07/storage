@@ -6,6 +6,7 @@ import { DirectoryView } from "../core/DirectoryView.js";
 import { wwwroot, prepareResponseFile, convertObjectUrlParsed, parsePlatformPath, parsePlatformPathWithRoot } from "../utils.js";
 import { FileStatus, RequestFile } from "../core/RequestFile.js";
 import swaggerJson from "../swagger.json" assert { type: "json" };
+import { getUser } from "@kinde-oss/kinde-node-express";
 
 export const router = Router();
 const fservice = new FileService(wwwroot);
@@ -135,6 +136,8 @@ router.delete("/delete", async (req, res) => {
  * @returns {object} The list of directories and files.
  */
 router.get("/listTree", async (req, res) => {
+    console.log(req.session);
+    
     
     return res.status(200).send(JSON.stringify([DirectoryView.listFromPath(wwwroot)], null, 2));
 
