@@ -7,7 +7,7 @@ import { configure } from "./security/configure-auth.js";
 export const app = express();
 
 app.use(cors({
-    origin: ["http://localhost:4201"],
+    origin: ["http://localhost:4201", "https://storagex.vercel.app"],
     allowedHeaders: "*",
     credentials: true,
     methods: ['GET','HEAD','PUT','PATCH','POST','DELETE', 'OPTIONS'],
