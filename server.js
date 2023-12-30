@@ -8,7 +8,7 @@ export const app = express();
 
 app.use(cors({
     origin: ["http://localhost:4201", "https://storagex.vercel.app"],
-    allowedHeaders: "*",
+    allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
     methods: ['GET','HEAD','PUT','PATCH','POST','DELETE', 'OPTIONS'],
 }));
