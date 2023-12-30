@@ -60,7 +60,7 @@ const storage = multer.diskStorage({
   filename: (req, file, callback) => {
     const lastDot = file.originalname.lastIndexOf(".");
     const name = file.originalname.slice(0, lastDot).split(" ").join("_");
-    const extensionFile = file.originalname.slice(lastDot);
+    const extensionFile = file.originalname.slice(lastDot + 1);
     const extension = MIME_TYPES[file.mimetype] || 
                       (Object.values(MIME_TYPES).includes(extensionFile) 
                               ? extensionFile 
