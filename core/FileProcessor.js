@@ -65,6 +65,8 @@ const storage = multer.diskStorage({
                       (Object.values(MIME_TYPES).includes(extensionFile) 
                               ? extensionFile 
                               : "txt");
+
+    console.log(lastDot, name, extensionFile, extension);
     callback(null, `${name}.${extension}`);
   },
 });
