@@ -1,3 +1,4 @@
+import dns from "dns"
 import path from 'path';
 import process from 'process';
 import { fileURLToPath } from 'url';
@@ -95,4 +96,20 @@ export function parsePlatformPathWithRoot(path) {
 
 export function detectPlatform() {
     return process.platform;
+}
+
+export async function isConnect() {
+    return new Promise((resolve, reject) => {
+        try {
+            dns.lookup("google.com", (err) => {
+                if (err && err.code == "ENOTFOUND") {
+                    resolve(false);
+                } else {
+                    resolve(true);
+                }
+            });
+        } catch (error) {
+            reject(error);
+        }
+    });
 }

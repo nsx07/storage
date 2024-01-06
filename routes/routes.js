@@ -102,7 +102,7 @@ router.get("/get", async (req, res) => {
 router.delete("/delete", async (req, res) => {
 
     try {
-        const request = req.body;
+        const request = req.query;
         console.log(request);
         const fileRequest = new RequestFile(request.fileName, request.projectName, request.projectScope);
         
@@ -191,6 +191,7 @@ router.delete("/deleteDirectory", async (req, res) => {
 router.patch("/rename", async (req, res) => {
     try {
         const body = req.body;
+        console.log(body);
 
         const result = await fservice.rename(
             parsePlatformPathWithRoot(body.oldPath), 
@@ -208,7 +209,7 @@ router.patch("/rename", async (req, res) => {
         
     } catch (error) {
         console.log(error);
-        res.status(500).send({message: "Error renaming directory"});
+        res.status(500).send({message: "Error renaming directory", error: error.message});
     }
 })
 
