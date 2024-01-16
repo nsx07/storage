@@ -1,4 +1,4 @@
-import { createDirectory, deleteDirectory, deleteFile, get, listTree, moveDirectory, moveFile, rename, renameFile, save, update } from "./storage.js";
+import { createDirectory, deleteDirectory, deleteFile, get, listTree, moveDirectory, moveFile, rename, renameFile, save, update, log } from "./storage.js";
 import { backup, listJobs, restore, removeJob } from "./backup.js";
 import swaggerJson from "../swagger.json" assert { type: "json" };
 import { FileService } from "../services/FileService.js";
