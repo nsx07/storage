@@ -13,6 +13,10 @@ export class FileService {
         this.path = path;
     }
 
+    fileExists(filePath) {
+        return fs.existsSync(filePath);
+    }
+
     async createFile(filePath, data) {
         
         return new Promise((resolve, reject) => {
@@ -52,11 +56,12 @@ export class FileService {
         })
     }	
 
-    async createDirectory(directoryPath) {
+    static async createDirectory(directoryPath) {
         return new Promise((resolve, reject) => {
 
             if (fs.existsSync(directoryPath)) {
                 resolve(ResponseFile.fromPath(directoryPath).SUCCESS);
+                return;
             }
 
             fs.mkdir(directoryPath, (err) => {
@@ -67,6 +72,10 @@ export class FileService {
                 resolve(ResponseFile.fromPath(directoryPath).SUCCESS);
             })
         })
+    }
+
+    async createDirectory(directoryPath) {
+        return FileService.createDirectory(directoryPath);
     }
 
     async deleteDirectory(directoryPath, force = true) {

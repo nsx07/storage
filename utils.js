@@ -135,8 +135,8 @@ function preventRootExclusion(path) {
 }
 
 
-var exception = {
-    new: (value) => {
-        throw new Error(value);
+export const multipleValuesSamePurpose = (values, call) => {
+    for (let value of values) {
+        call(value);
     }
 }

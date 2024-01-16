@@ -1,11 +1,11 @@
 import cors from "cors";
 import express from "express";
-import session from "express-session";
 import process from "process"
-import dns from "dns"
 import { router } from "./routes/routes.js";
+import cron from "node-cron"
 import { configure } from "./security/configure-auth.js";
-import { isConnect } from "./utils.js";
+import { isConnect, multipleValuesSamePurpose } from "./utils.js";
+import { removeCronJob } from "./routes/backup.js";
 
 export const app = express();
 
@@ -41,3 +41,8 @@ isConnect().then((isConnect) => {
 })
 
 app.listen(env, () => console.log(`Server Running at ${env.host}:${env.port}`))
+
+multipleValuesSamePurpose(["SIGINT", "SIGTERM", "EXIT"], s => process.on(s, x => {
+    cron.getTasks().forEach((v, k, m) => removeCronJob(k))
+    process.exit(0);
+}))

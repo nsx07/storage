@@ -7,6 +7,10 @@ export class DirectoryView {
     static listFromPath(_path) {
         const stat = fs.statSync(_path);
 
+        if (_path.includes("backup")) {
+            return;
+        }
+
         if (stat.isDirectory()) {
             const files = fs.readdirSync(_path);
 
