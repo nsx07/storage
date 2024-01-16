@@ -2,4 +2,4 @@
 
 sudo apt update
 sudo apt upgrade -y
-sudo apt install -y postgresql-16
+sudo apt install -y postgresql
