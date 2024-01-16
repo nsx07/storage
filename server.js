@@ -3,7 +3,7 @@ import express from "express";
 import process from "process"
 import { router } from "./routes/routes.js";
 import cron from "node-cron"
-import { Backup } from "./core/Backup";
+import { Backup } from "./core/Backup.js";
 import { configure } from "./security/configure-auth.js";
 import { isConnect, multipleValuesSamePurpose } from "./utils.js";
 import { removeCronJob } from "./routes/backup.js";
