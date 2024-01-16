@@ -3,10 +3,9 @@ import swaggerUi from "swagger-ui-express";
 import { FileService } from "../services/FileService.js";
 import { FileProcessor } from "../core/FileProcessor.js";
 import { DirectoryView } from "../core/DirectoryView.js";
-import { wwwroot, prepareResponseFile, convertObjectUrlParsed, parsePlatformPath, parsePlatformPathWithRoot } from "../utils.js";
+import { wwwroot, prepareResponseFile, convertObjectUrlParsed, parsePlatformPathWithRoot, VALIDATOR, parsePlatformPath } from "../utils.js";
 import { FileStatus, RequestFile } from "../core/RequestFile.js";
 import swaggerJson from "../swagger.json" assert { type: "json" };
-import { getUser } from "@kinde-oss/kinde-node-express";
 
 export const router = Router();
 const fservice = new FileService(wwwroot);
@@ -27,7 +26,7 @@ router.post("/save", FileProcessor, async (req, res) => {
         }
         res.status(400).send({message: "File missing."})
     } catch (error) {
-        res.status(400).send({message: error.message || "Error saving file"});
+        res.status(500).send({message: "Error saving file", error: error});
     }
 })
 
@@ -45,7 +44,7 @@ router.put("/update", FileProcessor, async (req, res) => {
         }
         res.status(400).send({message: "File missing."})
     } catch (error) {
-        res.status(400).send({message: error.message || "Error saving file"});
+        res.status(400).send({message: "Error saving file", error: error});
     }
 })
 
@@ -75,7 +74,7 @@ router.get("/get", async (req, res) => {
                 return res.status(404).send({message: "File not found"});
             }
             
-            return res.status(500).send({message: "Error saving file"});
+            return res.status(500).send({message: "Error saving file", error: result.error});
         }
     
         res.status(200).send(JSON.stringify({
@@ -87,7 +86,7 @@ router.get("/get", async (req, res) => {
         }))
     } catch (error) {
         console.log(error);
-        res.status(500).send({message: "Error getting file"});
+        res.status(500).send({message: "Error getting file", error: error.message, exception: error.exception});
     }
 })
 
@@ -103,7 +102,6 @@ router.delete("/delete", async (req, res) => {
 
     try {
         const request = req.query;
-        console.log(request);
         const fileRequest = new RequestFile(request.fileName, request.projectName, request.projectScope);
         
         const result = await fileRequest.deleteFile();
@@ -114,7 +112,7 @@ router.delete("/delete", async (req, res) => {
                 return res.status(404).send({message: "File not found"});
             }
             
-            return res.status(500).send({message: "Error deleting file"});
+            return res.status(500).send({message: "Error deleting file", error: result.error});
         }
     
         res.status(200).send(JSON.stringify({
@@ -125,7 +123,7 @@ router.delete("/delete", async (req, res) => {
         }))
     } catch (error) {
         console.log(error);
-        res.status(500).send({message: "Error deleting file"});
+        res.status(500).send({message: "Error deleting file", error: error.message, exception: error.exception});
     }
 
 })
@@ -136,21 +134,17 @@ router.delete("/delete", async (req, res) => {
  * @returns {object} The list of directories and files.
  */
 router.get("/listTree", async (req, res) => {
-    console.log(req.session);
-    
-    
     return res.status(200).send(JSON.stringify([DirectoryView.listFromPath(wwwroot)], null, 2));
-
 })
 
 router.post("/createDirectory", async (req, res) => {
     try {
         const body = req.body;
 
-        const result = await fservice.createDirectory(wwwroot + body.path);
+        const result = await fservice.createDirectory(VALIDATOR.critical(wwwroot + body.path));
 
         if (result.status != FileStatus.SUCCESS) {
-            return res.status(500).send({message: "Error creating directory"});
+            return res.status(500).send({message: "Error creating directory", error: result.error});
         }
 
         res.status(200).send(JSON.stringify({
@@ -160,21 +154,19 @@ router.post("/createDirectory", async (req, res) => {
         
     } catch (error) {
         console.log(error);
-        res.status(500).send({message: "Error creating directory"});
+        res.status(500).send({message: "Error creating directory", error: error.message, exception: error.exception});
     }
 })
 
 router.delete("/deleteDirectory", async (req, res) => {
     try {
-        const body = req.body;
-
-        console.log(convertObjectUrlParsed(body));
-        const result = await fservice.deleteDirectory(convertObjectUrlParsed(body));
-
-        console.log(result);
+        const body = req.query;
+        
+        const result = await fservice.deleteDirectory(VALIDATOR.critical(convertObjectUrlParsed(body)));
+        
 
         if (result.status != FileStatus.SUCCESS) {
-            return res.status(500).send({message: "Error deleting directory"});
+            return res.status(500).send({message: "Error deleting directory", error: result.error});
         }
 
         res.status(200).send(JSON.stringify({
@@ -184,7 +176,7 @@ router.delete("/deleteDirectory", async (req, res) => {
         
     } catch (error) {
         console.log(error);
-        res.status(500).send({message: "Error deleting directory"});
+        res.status(500).send({message: "Error deleting directory", error: error.message, exception: error.exception});
     }
 })
 
@@ -194,12 +186,12 @@ router.patch("/rename", async (req, res) => {
         console.log(body);
 
         const result = await fservice.rename(
-            parsePlatformPathWithRoot(body.oldPath), 
-            parsePlatformPathWithRoot(body.newPath)
+            VALIDATOR.critical(parsePlatformPathWithRoot(body.oldPath)), 
+            VALIDATOR.critical(parsePlatformPathWithRoot(body.newPath))
         );
 
         if (result.status != FileStatus.SUCCESS) {
-            return res.status(500).send({message: "Error renaming directory"});
+            return res.status(500).send({message: "Error renaming directory", error: result.error});
         }
 
         res.status(200).send(JSON.stringify({
@@ -209,7 +201,7 @@ router.patch("/rename", async (req, res) => {
         
     } catch (error) {
         console.log(error);
-        res.status(500).send({message: "Error renaming directory", error: error.message});
+        res.status(500).send({message: "Error renaming directory", error: error.message, error: error.message, exception: error.exception});
     }
 })
 
@@ -217,10 +209,10 @@ router.patch("/renameFile", async (req, res) => {
     try {
         const body = req.body;
 
-        const result = await fservice.rename(body.oldPath, body.newPath);
+        const result = await fservice.rename(VALIDATOR.critical(body.oldPath), VALIDATOR.critical(body.newPath));
 
         if (result.status != FileStatus.SUCCESS) {
-            return res.status(500).send({message: "Error renaming file"});
+            return res.status(500).send({message: "Error renaming file", error: result.error});
         }
 
         res.status(200).send(JSON.stringify({
@@ -230,7 +222,7 @@ router.patch("/renameFile", async (req, res) => {
         
     } catch (error) {
         console.log(error);
-        res.status(500).send({message: "Error renaming file"});
+        res.status(500).send({message: "Error renaming file", error: error.message, exception: error.exception});
     }
 })
 
@@ -238,10 +230,10 @@ router.patch("/moveFile", async (req, res) => {
     try {
         const body = req.body;
 
-        const result = await fservice.rename(body.oldPath, body.newPath);
+        const result = await fservice.rename(VALIDATOR.critical(body.oldPath), VALIDATOR.critical(body.newPath));
 
         if (result.status != FileStatus.SUCCESS) {
-            return res.status(500).send({message: "Error moving file"});
+            return res.status(500).send({message: "Error moving file", error: result.error});
         }
 
         res.status(200).send(JSON.stringify({
@@ -251,7 +243,7 @@ router.patch("/moveFile", async (req, res) => {
         
     } catch (error) {
         console.log(error);
-        res.status(500).send({message: "Error moving file"});
+        res.status(500).send({message: "Error moving file", error: error.message, exception: error.exception});
     }
 })
 
@@ -259,10 +251,10 @@ router.patch("/moveDirectory", async (req, res) => {
     try {
         const body = req.body;
 
-        const result = await fservice.rename(body.oldPath, body.newPath);
+        const result = await fservice.rename(VALIDATOR.critical(body.oldPath), VALIDATOR.critical(body.newPath));
 
         if (result.status != FileStatus.SUCCESS) {
-            return res.status(500).send({message: "Error moving directory"});
+            return res.status(500).send({message: "Error moving directory", error: result.error});
         }
 
         res.status(200).send(JSON.stringify({
@@ -272,7 +264,7 @@ router.patch("/moveDirectory", async (req, res) => {
         
     } catch (error) {
         console.log(error);
-        res.status(500).send({message: "Error moving directory"});
+        res.status(500).send({message: "Error moving directory", error: error.message, exception: error.exception});
     }
 })
 
@@ -280,10 +272,10 @@ router.put("/copyFile", async (req, res) => {
     try {
         const body = req.body;
 
-        const result = await fservice.copyFile(body.oldPath, body.newPath);
+        const result = await fservice.copyFile(VALIDATOR.critical(body.oldPath), VALIDATOR.critical(body.newPath));
 
         if (result.status != FileStatus.SUCCESS) {
-            return res.status(500).send({message: "Error copying file"});
+            return res.status(500).send({message: "Error copying file", error: result.error});
         }
 
         res.status(200).send(JSON.stringify({
@@ -293,7 +285,7 @@ router.put("/copyFile", async (req, res) => {
         
     } catch (error) {
         console.log(error);
-        res.status(500).send({message: "Error copying file"});
+        res.status(500).send({message: "Error copying file", error: error.message, exception: error.exception});
     }
 })
 
@@ -301,10 +293,10 @@ router.put("/copyDirectory", async (req, res) => {
     try {
         const body = req.body;
 
-        const result = await fservice.copyDirectory(body.oldPath, body.newPath);
+        const result = await fservice.copyDirectory(VALIDATOR.critical(body.oldPath), VALIDATOR.critical(body.newPath));
 
         if (result.status != FileStatus.SUCCESS) {
-            return res.status(500).send({message: "Error copying directory"});
+            return res.status(500).send({message: "Error copying directory", error: result.error});
         }
 
         res.status(200).send(JSON.stringify({
@@ -314,6 +306,27 @@ router.put("/copyDirectory", async (req, res) => {
         
     } catch (error) {
         console.log(error);
-        res.status(500).send({message: "Error copying directory"});
+        res.status(500).send({message: "Error copying directory", error: error.message, exception: error.exception});
+    }
+})
+
+router.put("/log", async (req, res) => {
+    try {
+        const body = req.body;
+
+        const result = await fservice.log(VALIDATOR.critical(parsePlatformPath("/logs/" + body.path)), body.content);
+
+        if (result.status != FileStatus.SUCCESS) {
+            return res.status(500).send({message: "Error logging", error: result.error});
+        }
+
+        res.status(200).send(JSON.stringify({
+            path: result.path,
+            status: result.status
+        }))
+        
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({message: "Error logging", error: error.message, exception: error.exception});
     }
 })

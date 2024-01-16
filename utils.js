@@ -48,7 +48,7 @@ export function stripPath(_path = "") {
     return parsePlatformPath(_path.slice(_path.indexOf("wwwroot") + 7));
 }
 
-export function convertObjectUrlParsed(obj) { 
+export function convertObjectUrlParsed(obj, isFolder = false) { 
     let url = wwwroot;
 
     if (obj.projectName) {
@@ -59,7 +59,7 @@ export function convertObjectUrlParsed(obj) {
         url += `/${obj.projectScope}`;
     }
 
-    if (obj.fileName && obj.fileName.includes(".")) {
+    if (obj.fileName && (!isFolder || obj.fileName.includes("."))) {
         url += `/${obj.fileName}`;
     }
 
@@ -112,4 +112,31 @@ export async function isConnect() {
             reject(error);
         }
     });
+}
+
+export const VALIDATOR = {
+    critical : (path) => {
+        preventPathTraversal(path);
+        preventRootExclusion(path);
+        return path;
+    }
+}
+
+function preventPathTraversal(path) {
+    if (path.includes("..")) {
+        throw new Error("path traversal is not allowed");
+    }
+}
+
+function preventRootExclusion(path) {
+    if (path === wwwroot) {
+        throw new Error("root cannot change!");
+    }
+}
+
+
+var exception = {
+    new: (value) => {
+        throw new Error(value);
+    }
 }

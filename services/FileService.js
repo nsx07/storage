@@ -1,7 +1,9 @@
 import fs from "fs";
 import path from "path";
 import process from "process";
-import { ResponseFile, FileStatus } from "../core/RequestFile.js";
+import { ResponseFile, FileStatus, RequestFile } from "../core/RequestFile.js";
+import { log } from "console";
+import { wwwroot } from "../utils.js";
 
 export class FileService {
 
@@ -52,6 +54,11 @@ export class FileService {
 
     async createDirectory(directoryPath) {
         return new Promise((resolve, reject) => {
+
+            if (fs.existsSync(directoryPath)) {
+                resolve(ResponseFile.fromPath(directoryPath).SUCCESS);
+            }
+
             fs.mkdir(directoryPath, (err) => {
                 if (err) {
                     reject(new ResponseFile(FileStatus.ERROR, null, err));
@@ -148,6 +155,45 @@ export class FileService {
     async moveDirectory(oldPath, newPath) {
         return new Promise((resolve, reject) => {
             reject("Not implemented")
+        })
+    }
+
+    static async readFile(filePath, encoding = "base64url") {
+        return new Promise((resolve, reject) => {
+            fs.readFile(filePath, (err, data) => {
+                if (err) {
+
+                    if (["ENOENT", "ENOTDIR"].includes(err.code)) {
+                        return reject(ResponseFile.NOT_FOUND);
+                    }
+
+                    return reject(new ResponseFile(FileStatus.ERROR, null, err));
+
+                }
+
+                return resolve(new ResponseFile(FileStatus.SUCCESS, data.toString(encoding), err));
+            })
+        })
+    }
+
+    async log(path, content) {
+        return new Promise(async (resolve, reject) => {
+            const ncontent = `[${new Date().toISOString()}] - ${content}\n`;
+            path += ".txt";
+            
+            
+            try {
+                await this.createDirectory(wwwroot + "/logs")
+                    .catch((err) => {
+                        reject(err);
+                    })
+                
+                fs.appendFileSync(wwwroot + path, ncontent, {encoding: "utf-8"});
+                
+            } catch (error) {
+                reject(error)
+            }
+
         })
     }
 

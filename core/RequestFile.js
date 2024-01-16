@@ -89,14 +89,6 @@ export class RequestFile {
                     return resolve(new ResponseFile(FileStatus.ERROR, null, err));
                 }
                 
-                try {
-                    if (fs.readdirSync(path.dirname(filePath)).length === 0) {
-                        fs.rmdirSync(path.dirname(filePath));
-                    }
-                } catch (error) {
-                    console.info(error)
-                }
-                
                 return resolve(ResponseFile.fromPath(filePath).SUCCESS);
             })
         })
