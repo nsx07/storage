@@ -1,18 +1,30 @@
 #!/bin/bash
 
+# Define PostgreSQL version and download URL
+POSTGRESQL_VERSION=16.1
+POSTGRESQL_URL=https://ftp.postgresql.org/pub/source/v${POSTGRESQL_VERSION}/postgresql-${POSTGRESQL_VERSION}.tar.gz
+
+# Install necessary build dependencies
 sudo apt update
-sudo apt install -y wget 
+sudo apt install -y build-essential zlib1g-dev libreadline-dev
 
-# Download and install specific version of pg_dump and pg_restore
-wget https://download.postgresql.org/pub/binaries/linux/ubuntu/$(lsb_release -cs)/x86_64/pg_dump -O /usr/bin/pg_dump
-wget https://download.postgresql.org/pub/binaries/linux/ubuntu/$(lsb_release -cs)/x86_64/pg_restore -O /usr/bin/pg_restore
-chmod +x /usr/bin/pg_dump /usr/bin/pg_restore
+# Download and extract PostgreSQL source
+wget -O postgresql-${POSTGRESQL_VERSION}.tar.gz ${POSTGRESQL_URL}
+tar -xf postgresql-${POSTGRESQL_VERSION}.tar.gz
+cd postgresql-${POSTGRESQL_VERSION}
 
-echo "PostgreSQL tools installed successfully."
+# Configure, build, and install PostgreSQL
+./configure
+make
+sudo make install
 
-# Check if the installation was successful
-if [ $? -eq 0 ]; then
-    echo "PostgreSQL client installed successfully."
-else
-    echo "Error: Failed to install PostgreSQL client."
-fi
+# Initialize the PostgreSQL database cluster
+sudo adduser --system --disabled-password --group --home=/usr/local/pgsql/data postgres
+sudo mkdir -p /usr/local/pgsql/data
+sudo chown postgres:postgres /usr/local/pgsql/data
+sudo su - postgres -c '/usr/local/pgsql/bin/initdb -D /usr/local/pgsql/data'
+
+# Start the PostgreSQL server
+sudo su - postgres -c '/usr/local/pgsql/bin/pg_ctl -D /usr/local/pgsql/data -l logfile start'
+
+echo "PostgreSQL ${POSTGRESQL_VERSION} installed successfully."
