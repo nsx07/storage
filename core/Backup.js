@@ -1,6 +1,6 @@
 import { exec } from "child_process";
 
-class Backup {
+export class Backup {
     
     host
     port
