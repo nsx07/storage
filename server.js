@@ -3,6 +3,7 @@ import express from "express";
 import process from "process"
 import { router } from "./routes/routes.js";
 import cron from "node-cron"
+import { Backup } from "./core/Backup";
 import { configure } from "./security/configure-auth.js";
 import { isConnect, multipleValuesSamePurpose } from "./utils.js";
 import { removeCronJob } from "./routes/backup.js";
@@ -33,7 +34,10 @@ const env = {
 isConnect().then((isConnect) => {
     if (!isConnect) {
         console.log("No Internet Connection")
-    } else configure(app, env)
+    } else {
+        configure(app, env)
+        Backup.prepareEnv()
+    }
     
 }).catch((err) => {
     console.log(err)
