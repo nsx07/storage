@@ -162,6 +162,7 @@ router.delete("/deleteDirectory", async (req, res) => {
     try {
         const body = req.query;
         
+        console.log(convertObjectUrlParsed(body));
         const result = await fservice.deleteDirectory(VALIDATOR.critical(convertObjectUrlParsed(body)));
         
 

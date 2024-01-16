@@ -48,7 +48,7 @@ export function stripPath(_path = "") {
     return parsePlatformPath(_path.slice(_path.indexOf("wwwroot") + 7));
 }
 
-export function convertObjectUrlParsed(obj, isFolder = false) { 
+export function convertObjectUrlParsed(obj, isFile = false) { 
     let url = wwwroot;
 
     if (obj.projectName) {
@@ -59,7 +59,7 @@ export function convertObjectUrlParsed(obj, isFolder = false) {
         url += `/${obj.projectScope}`;
     }
 
-    if (obj.fileName && (!isFolder || obj.fileName.includes("."))) {
+    if (obj.fileName && isFile) {
         url += `/${obj.fileName}`;
     }
 
