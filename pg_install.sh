@@ -1,12 +1,5 @@
 #!/bin/bash
 
 sudo apt update
-sudo apt install -y gnupg2 wget vim
-
-sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
-
-curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/postgresql.gpg
-
-sudo apt update
-
-sudo apt install -y postgresql-16 postgresql-contrib-16
+sudo apt upgrade -y
+sudo apt install -y postgresql
