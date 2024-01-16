@@ -31,7 +31,7 @@ export class Backup {
     }
 
     static prepareEnv() {
-        exec("apt-get install postgresql-client", (error, stdout, stderr) => {
+        exec("apt install postgresql-client", (error, stdout, stderr) => {
             if (error) {
                 console.log(`error: ${error.message}`);
                 return;
