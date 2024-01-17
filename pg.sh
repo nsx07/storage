@@ -5,10 +5,9 @@ sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt jammy-pgdg main" >
 
 wget -qO- https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo tee /etc/apt/trusted.gpg.d/pgdg.asc &>/dev/null
 
-sudo apt install postgresql postgresql-client -y
+sudo apt install postgresql-client-16 -y
 
-sudo systemctl status postgresql or sudo service postgresql status
-
+uname -a
 echo "please version! be 16!!!"
 
 psql --version
