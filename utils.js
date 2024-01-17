@@ -59,7 +59,7 @@ export function convertObjectUrlParsed(obj, isFile = false) {
         url += `/${obj.projectScope}`;
     }
 
-    if (obj.fileName && isFile) {
+    if (obj.fileName && (isFile || !obj.fileName.includes("."))) {
         url += `/${obj.fileName}`;
     }
 
