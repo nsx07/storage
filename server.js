@@ -1,11 +1,11 @@
 import cors from "cors";
-import express from "express";
-import process from "process"
-import { router } from "./routes/routes.js";
 import cron from "node-cron"
+import process from "process"
+import express from "express";
+import { router } from "./routes/routes.js";
+import { removeCronJob } from "./core/Scheduler.js";
 import { configure } from "./security/configure-auth.js";
 import { isConnect, multipleValuesSamePurpose } from "./utils.js";
-import { removeCronJob } from "./routes/backup.js";
 
 export const app = express();
 
@@ -14,11 +14,6 @@ app.use(cors({
     allowedHeaders: '*',
     methods: ['GET','HEAD','PUT','PATCH','POST','DELETE', 'OPTIONS'],
 }));
-// app.use(session({
-//     secret: Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15),
-//     saveUninitialized: true,
-//     resave: false,
-// }));
 app.use(express.json());
 app.use("/api", router)
 app.use("/wwwroot", express.static("wwwroot"));

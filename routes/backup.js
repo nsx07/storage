@@ -1,6 +1,7 @@
+import { getJobs, removeCronJob, setCronJon } from "../core/Scheduler.js";
 import { wwwroot, VALIDATOR, parsePlatformPath } from "../utils.js";
-import { exec } from "child_process";
 import { FileService } from "../services/FileService.js";
+import { exec } from "child_process";
 import cron from "node-cron";
 
 const fService = new FileService();
@@ -59,7 +60,7 @@ export const backup = async (req, res) => {
                         return;
                     }
                 })
-            }, payload.name)
+            }, payload.name, payload)
         }
 
         exec(command, (error, stdout, stderr) => {
@@ -159,33 +160,5 @@ async function saveLog(message, stdout, stderr, command) {
     await fService.createDirectory(`${wwwroot}/backup/logs`);
 
     await fService.log(VALIDATOR.critical(parsePlatformPath(`/backup/logs/${new Date().toISOString().split('T')[0]}_log`)),
-    `
-    [${date.toISOString()}] ${message}
-    [${date.toISOString()}] command: ${command}
-    ===============OUTPUT START================
-    [${date.toISOString()}] stdout: ${stdout}
-    [${date.toISOString()}] stderr: ${stderr}
-    ===============OUTPUT END =================
-    `);
-}
-
-function getJobs() {
-    return Array.from(cron.getTasks().keys());
-}
-
-function setCronJon(cb, name, options) {
-    cron.schedule("0 1 * * *", () => {
-        cb();
-    }, {name: `${name}`, timezone: "America/Sao_Paulo", scheduled: true, ...options})
-} 
-
-export function removeCronJob(name) {
-    let cronJob = cron.getTasks().get(name)
-    if (cronJob) {
-        console.log("removing job " + name);
-        cron.getTasks().delete(name)
-        cronJob.stop();
-        return true;
-    }
-    return false;
+    `\n[${date.toISOString()}] ${message}\n[${date.toISOString()}] command: ${command}\n===============OUTPUT START================\n[${date.toISOString()}] stdout: ${stdout}\n[${date.toISOString()}] stderr: ${stderr}\n===============OUTPUT END =================`);
 }
