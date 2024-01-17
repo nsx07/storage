@@ -1,6 +1,9 @@
 import { wwwroot, prepareResponseFile, convertObjectUrlParsed, parsePlatformPathWithRoot, VALIDATOR, parsePlatformPath } from "../utils.js";
 import { FileStatus, RequestFile } from "../core/RequestFile.js";
 import { DirectoryView } from "../core/DirectoryView.js";
+import { FileService } from "../services/FileService.js";
+
+const fservice = new FileService();
 
 /**
  * Save file.
