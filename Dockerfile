@@ -8,7 +8,6 @@ RUN apt-get update && apt install wget
 RUN sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt trixie-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
 RUN wget -qO- https://www.postgresql.org/media/keys/ACCC4CF8.asc | tee /etc/apt/trusted.gpg.d/pgdg.asc &>/dev/null
 RUN apt install postgresql postgresql-client -y
-RUN systemctl status postgresql
 RUN psql --version
 
 RUN npm install
