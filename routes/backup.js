@@ -1,4 +1,4 @@
-import { wwwroot } from "../utils.js";
+import { wwwroot, VALIDATOR, parsePlatformPath } from "../utils.js";
 import { exec } from "child_process";
 import { FileService } from "../services/FileService.js";
 import cron from "node-cron";
@@ -11,20 +11,28 @@ const fService = new FileService();
  *  "folder": "string",
  *  "connectionString": "string",
  *  "continuos": "boolean"
- *  "interval": "number"
+ *  "zip": "boolean"
  * }
- * @command pg_dump --dbname=postgresql://postgres:password@localhost:5432/postgres >> file
+ * @command pg_dump -F t --dbname=postgresql://postgres:password@localhost:5432/postgres >> file
  */
 export const backup = async (req, res) => {
     try {
 
         const payload = req.body || req.query;
+
+        if (payload.name == null || payload.folder == null || payload.connectionString == null) {
+            res.status(400).send(JSON.stringify({
+                message: "name, folder and connectionString are required",
+                status: "failed",
+            }))
+            return; 
+        }
+
+        // must not contain file extension
+        payload.name = payload.name.split(".")[0];
         const path = `${wwwroot}/backup/${payload.folder}/${payload.name}`;        
-
-        await fService.createDirectory(`${wwwroot}/backup`);
-        await fService.createDirectory(`${wwwroot}/backup/${payload.folder}`);
-
         if (cron.getTasks().has(payload.name)) {
+
             console.log(payload.name + " already exists", Array.from(cron.getTasks().keys()));
             cron.getTasks().get(payload.name).now()
 
@@ -36,9 +44,16 @@ export const backup = async (req, res) => {
             return;
         }
 
+        await fService.createDirectory(`${wwwroot}/backup`);
+        await fService.createDirectory(`${wwwroot}/backup/${payload.folder}`);
+
+        const command = `pg_dump ${!payload.zip ? "-F t" : ""} --dbname=${payload.connectionString} >> ${path}`;
+
         if (payload.continuos) {
             setCronJon(() => {
-                exec(`pg_dump --dbname=${payload.connectionString} >> ${path}`, (error, stdout, stderr) => {
+                exec(command, (error, stdout, stderr) => {
+                    saveLog("dump " + (error ? "❌" : "✔"), stdout, stderr, command);
+                    
                     if (error) {
                         console.log(`error: ${error.message}`);
                         return;
@@ -47,7 +62,8 @@ export const backup = async (req, res) => {
             }, payload.name)
         }
 
-        exec(`pg_dump --dbname=${payload.connectionString} >> ${path}`, (error, stdout, stderr) => {
+        exec(command, (error, stdout, stderr) => {
+            saveLog("dump " + (error ? "❌" : "✔"), stdout, stderr, command);
 
             if (error) {
                 fService.deleteFile(path);
@@ -75,7 +91,7 @@ export const backup = async (req, res) => {
  *  "folder": "string",
  *  "connectionString": "string"
  * }
- * @command pg_restore --no-privileges --no-owner --dbname=postgresql://username:password@host:port/database file
+ * @command pg_restore -F t --no-privileges --no-owner --dbname=postgresql://username:password@host:port/database file
  */
 export const restore = async (req, res) => {
     try {
@@ -89,8 +105,9 @@ export const restore = async (req, res) => {
             }))
         }
 
-        exec(`pg_restore --no-privileges --no-owner --dbname=${payload.connectionString} ${path}`, (error, stdout, stderr) => {
-
+        const command = `pg_restore -F t --no-privileges --no-owner --dbname=${payload.connectionString} ${path}`
+        exec(command, (error, stdout, stderr) => {
+            saveLog("restore " + (error ? "❌" : "✔"), stdout, stderr, command);
             if (error) {
                 console.log(`error: ${error.message}`);
                 res.status(500).send({message: "Error backuping", error: error.message, exception: error.exception});
@@ -103,11 +120,6 @@ export const restore = async (req, res) => {
             }))
         })
 
-        res.status(300).send(JSON.stringify({
-            message: "process failed",
-            status: "failed",
-        }))
-        
     } catch (error) {
         console.log(error);
         res.status(500).send({message: "Error restoring", error: error.message, exception: error.exception});
@@ -141,13 +153,24 @@ export const listJobs = async (req, res) => {
     }
 }
 
+async function saveLog(message, stdout, stderr, command) {
+    const date = new Date();
+
+    await fService.createDirectory(`${wwwroot}/backup/logs`);
+
+    await fService.log(VALIDATOR.critical(parsePlatformPath(`/backup/logs/${new Date().toISOString().split('T')[0]}_log`)),
+    `
+    [${date.toISOString()}] ${message}
+    [${date.toISOString()}] command: ${command}
+    ===============OUTPUT START================
+    [${date.toISOString()}] stdout: ${stdout}
+    [${date.toISOString()}] stderr: ${stderr}
+    ===============OUTPUT END =================
+    `);
+}
+
 function getJobs() {
-    const jobs = [];
-    cron.getTasks().forEach((value, key) => {
-        
-        jobs.push({name: key, next: value.eventNames()});
-    })
-    return jobs;
+    return Array.from(cron.getTasks().keys());
 }
 
 function setCronJon(cb, name, options) {
