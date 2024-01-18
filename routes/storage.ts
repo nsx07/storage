@@ -324,3 +324,20 @@ export const log = async (req: Request, res: Response) => {
         res.status(500).send({message: "Error logging", error: (error as Error).name, exception: (error as Error).message});
     }
 }
+
+export const validateToken = (req: Request, res: Response) => {
+
+    const token = req.query.token;
+
+    if (!token) {
+        res.status(400).send({ success: false, message: "Token is missing" })
+        return
+    }
+
+    if (token != process.env.STORAGE_TOKEN) {
+        res.status(401).send({ success: false, message: "Token is invalid" })
+        return
+    }
+
+    res.status(200).send({ success: true, message: "Token validated" })
+}

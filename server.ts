@@ -4,7 +4,8 @@ import process from "process"
 import express from "express";
 import { router } from "./routes/routes.js";
 import { removeCronJob } from "./core/Scheduler.js";
-import { multipleValuesSamePurpose } from "./utils.js";
+import { multipleValuesSamePurpose, wwwroot } from "./utils.js";
+import { FileService } from "./services/FileService.js";
 
 export const app = express();
 
@@ -20,7 +21,7 @@ app.use("/wwwroot", express.static("wwwroot"));
 
 const env = {
     host: "0.0.0.0",
-    port: process.env.PORT ?? "3000",
+    port: "3000",
     production: process.env.NODE_ENV === "production"
 }
 
@@ -30,3 +31,8 @@ multipleValuesSamePurpose(["SIGINT", "SIGTERM", "EXIT"], s => process.on(s as st
     cron.getTasks().forEach((v, k, m) => removeCronJob(k))
     process.exit(0);
 }))
+
+if (!env.production) {
+    process.env["STORAGE_TOKEN"] = "test"
+    FileService.createDirectory(wwwroot)
+}
