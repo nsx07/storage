@@ -1,10 +1,10 @@
 import cron from "node-cron";
 
 export function getJobs() {
-    return Array.from(cron.getTasks().values()).map((x) => x.options);
+    return Array.from(cron.getTasks().values()).map((x) => (x as any).options);
 }
 
-export function setCronJon(cb, name, options) {
+export function setCronJon(cb: () => void, name: string, options: any) {
     options.cron = options.cron ?? "0 0 1 * * *";
 
     try {
@@ -17,7 +17,7 @@ export function setCronJon(cb, name, options) {
     }
 } 
 
-export function removeCronJob(name) {
+export function removeCronJob(name: string) {
     let cronJob = cron.getTasks().get(name)
     if (cronJob) {
         console.log("removing job " + name);

@@ -2,6 +2,7 @@ import { wwwroot, prepareResponseFile, convertObjectUrlParsed, parsePlatformPath
 import { FileStatus, RequestFile } from "../core/RequestFile.js";
 import { DirectoryView } from "../core/DirectoryView.js";
 import { FileService } from "../services/FileService.js";
+import { Request, Response } from "express";
 
 const fservice = new FileService();
 
@@ -11,7 +12,7 @@ const fservice = new FileService();
  * @param {string} request.query.projectName - The name of the project.
  * @param {string} request.query.projectScope - The scope of the project.
  */
-export const save = async (req, res) => {
+export const save = async (req: Request, res: Response) => {
     try {
         if (req.file || req.files) {
             return res.status(201).send(prepareResponseFile(req));
@@ -29,7 +30,7 @@ export const save = async (req, res) => {
  * @param {string} request.query.projectScope - The scope of the project.
  * @param {string} request.query.oldFileName - The name of the file to update.
  */
-export const update = async (req, res) => {
+export const update = async (req: Request, res: Response) => {
     try {
         if (req.file || req.files) {
             return res.status(201).send(prepareResponseFile(req));
@@ -48,12 +49,12 @@ export const update = async (req, res) => {
  * @param {string} projectScope - The scope of the project.
  * @returns {object} The file information.
  */
-export const get = async (req, res) => {
+export const get = async (req: Request, res: Response) => {
     try {
         const request = {
-            fileName: req.query.fileName,
-            projectName: req.query.projectName,
-            projectScope: req.query.projectScope
+            fileName: req.query.fileName as string,
+            projectName: req.query.projectName as string,
+            projectScope: req.query.projectScope as string
         };
     
         const fileRequest = new RequestFile(request.fileName, request.projectName, request.projectScope);
@@ -78,7 +79,7 @@ export const get = async (req, res) => {
         }))
     } catch (error) {
         console.log(error);
-        res.status(500).send({message: "Error getting file", error: error.message, exception: error.exception});
+        res.status(500).send({message: "Error getting file", error: (error as Error).name, exception: (error as Error).message});
     }
 }
 
@@ -90,10 +91,10 @@ export const get = async (req, res) => {
  * @param {string} projectScope - The scope of the project.
  * @returns {object} The result of the deletion.
  */
-export const deleteFile = async (req, res) => {
+export const deleteFile = async (req: Request, res: Response) => {
 
     try {
-        const request = req.query;
+        const request = req.query as Record<string, string>;
         const fileRequest = new RequestFile(request.fileName, request.projectName, request.projectScope);
         
         const result = await fileRequest.deleteFile();
@@ -115,7 +116,7 @@ export const deleteFile = async (req, res) => {
         }))
     } catch (error) {
         console.log(error);
-        res.status(500).send({message: "Error deleting file", error: error.message, exception: error.exception});
+        res.status(500).send({message: "Error deleting file", error: (error as Error).name, exception: (error as Error).message});
     }
 
 }
@@ -125,11 +126,11 @@ export const deleteFile = async (req, res) => {
  * 
  * @returns {object} The list of directories and files.
  */
-export const listTree = async (req, res) => {
+export const listTree = async (req: Request, res: Response) => {
     return res.status(200).send(JSON.stringify([DirectoryView.listFromPath(wwwroot)], null, 2));
 }
 
-export const createDirectory = async (req, res) => {
+export const createDirectory = async (req: Request, res: Response) => {
     try {
         const body = req.body;
 
@@ -146,11 +147,11 @@ export const createDirectory = async (req, res) => {
         
     } catch (error) {
         console.log(error);
-        res.status(500).send({message: "Error creating directory", error: error.message, exception: error.exception});
+        res.status(500).send({message: "Error creating directory", error: (error as Error).name, exception: (error as Error).message});
     }
 }
 
-export const deleteDirectory = async (req, res) => {
+export const deleteDirectory = async (req: Request, res: Response) => {
     try {
         const body = req.query;
         
@@ -169,11 +170,11 @@ export const deleteDirectory = async (req, res) => {
         
     } catch (error) {
         console.log(error);
-        res.status(500).send({message: "Error deleting directory", error: error.message, exception: error.exception});
+        res.status(500).send({message: "Error deleting directory", error: (error as Error).name, exception: (error as Error).message});
     }
 }
 
-export const rename = async (req, res) => {
+export const rename = async (req: Request, res: Response) => {
     try {
         const body = req.body;
         console.log(body);
@@ -194,11 +195,11 @@ export const rename = async (req, res) => {
         
     } catch (error) {
         console.log(error);
-        res.status(500).send({message: "Error renaming directory", error: error.message, error: error.message, exception: error.exception});
+        res.status(500).send({message: "Error renaming directory", error: (error as Error).name, exception: (error as Error).message});
     }
 }
 
-export const renameFile = async (req, res) => {
+export const renameFile = async (req: Request, res: Response) => {
     try {
         const body = req.body;
 
@@ -215,11 +216,11 @@ export const renameFile = async (req, res) => {
         
     } catch (error) {
         console.log(error);
-        res.status(500).send({message: "Error renaming file", error: error.message, exception: error.exception});
+        res.status(500).send({message: "Error renaming file", error: (error as Error).name, exception: (error as Error).message});
     }
 }
 
-export const moveFile = async (req, res) => {
+export const moveFile = async (req: Request, res: Response) => {
     try {
         const body = req.body;
 
@@ -236,11 +237,11 @@ export const moveFile = async (req, res) => {
         
     } catch (error) {
         console.log(error);
-        res.status(500).send({message: "Error moving file", error: error.message, exception: error.exception});
+        res.status(500).send({message: "Error moving file", error: (error as Error).name, exception: (error as Error).message});
     }
 }
 
-export const moveDirectory = async (req, res) => {
+export const moveDirectory = async (req: Request, res: Response) => {
     try {
         const body = req.body;
 
@@ -257,11 +258,11 @@ export const moveDirectory = async (req, res) => {
         
     } catch (error) {
         console.log(error);
-        res.status(500).send({message: "Error moving directory", error: error.message, exception: error.exception});
+        res.status(500).send({message: "Error moving directory", error: (error as Error).name, exception: (error as Error).message});
     }
 }
 
-export const copyFile = async (req, res) => {
+export const copyFile = async (req: Request, res: Response) => {
     try {
         const body = req.body;
 
@@ -278,11 +279,11 @@ export const copyFile = async (req, res) => {
         
     } catch (error) {
         console.log(error);
-        res.status(500).send({message: "Error copying file", error: error.message, exception: error.exception});
+        res.status(500).send({message: "Error copying file", error: (error as Error).name, exception: (error as Error).message});
     }
 }
 
-export const copyDirectory = async (req, res) => {
+export const copyDirectory = async (req: Request, res: Response) => {
     try {
         const body = req.body;
 
@@ -299,11 +300,11 @@ export const copyDirectory = async (req, res) => {
         
     } catch (error) {
         console.log(error);
-        res.status(500).send({message: "Error copying directory", error: error.message, exception: error.exception});
+        res.status(500).send({message: "Error copying directory", error: (error as Error).name, exception: (error as Error).message});
     }
 }
 
-export const log = async (req, res) => {
+export const log = async (req: Request, res: Response) => {
     try {
         const body = req.body;
 
@@ -320,6 +321,6 @@ export const log = async (req, res) => {
         
     } catch (error) {
         console.log(error);
-        res.status(500).send({message: "Error logging", error: error.message, exception: error.exception});
+        res.status(500).send({message: "Error logging", error: (error as Error).name, exception: (error as Error).message});
     }
 }

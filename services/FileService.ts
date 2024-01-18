@@ -1,25 +1,23 @@
 import fs from "fs";
 import path from "path";
-import process from "process";
-import { ResponseFile, FileStatus, RequestFile } from "../core/RequestFile.js";
-import { log } from "console";
 import { wwwroot } from "../utils.js";
+import { ResponseFile, FileStatus, RequestFile } from "../core/RequestFile.js";
 
 export class FileService {
 
     path;
 
-    constructor(path) {
+    constructor(path?: string) {
         this.path = path;
     }
 
-    fileExists(filePath) {
+    fileExists(filePath: string) {
         return fs.existsSync(filePath);
     }
 
-    async createFile(filePath, data) {
+    async createFile(filePath: string, data: string) {
         
-        return new Promise((resolve, reject) => {
+        return new Promise<ResponseFile>((resolve, reject) => {
             fs.writeFile(filePath, data, (err) => {
                 if (err) {
                     reject(new ResponseFile(FileStatus.ERROR, null, err));
@@ -30,8 +28,8 @@ export class FileService {
         })
     }
 
-    async deleteFile(filePath) {
-        return new Promise((resolve, reject) => {
+    async deleteFile(filePath: string) {
+        return new Promise<ResponseFile>((resolve, reject) => {
             
             if (!fs.existsSync(filePath)) {
                 return resolve(ResponseFile.NOT_FOUND);
@@ -56,8 +54,8 @@ export class FileService {
         })
     }	
 
-    static async createDirectory(directoryPath) {
-        return new Promise((resolve, reject) => {
+    static async createDirectory(directoryPath: string) {
+        return new Promise<ResponseFile>((resolve, reject) => {
 
             if (fs.existsSync(directoryPath)) {
                 resolve(ResponseFile.fromPath(directoryPath).SUCCESS);
@@ -74,12 +72,12 @@ export class FileService {
         })
     }
 
-    async createDirectory(directoryPath) {
+    async createDirectory(directoryPath: string) {
         return FileService.createDirectory(directoryPath);
     }
 
-    async deleteDirectory(directoryPath, force = true) {
-        return new Promise((resolve, reject) => {
+    async deleteDirectory(directoryPath: string, force = true) {
+        return new Promise<ResponseFile>((resolve, reject) => {
             
             if (!fs.existsSync(directoryPath)) 
                 return resolve(ResponseFile.NOT_FOUND);
@@ -94,8 +92,8 @@ export class FileService {
         })
     }
 
-    async rename(oldPath, newPath) {
-        return new Promise((resolve, reject) => {
+    async rename(oldPath: string, newPath: string) {
+        return new Promise<ResponseFile>((resolve, reject) => {
             
             if (!fs.existsSync(oldPath)) 
                 return resolve(ResponseFile.NOT_FOUND);
@@ -110,8 +108,8 @@ export class FileService {
         })
     }
 
-    async copyFile(oldPath, newPath) {
-        return new Promise((resolve, reject) => {
+    async copyFile(oldPath: string, newPath: string) {
+        return new Promise<ResponseFile>((resolve, reject) => {
             
             if (!fs.existsSync(oldPath)) 
                 return resolve(ResponseFile.NOT_FOUND);
@@ -126,18 +124,22 @@ export class FileService {
         })
     }
 
-    async copyDirectory(oldPath, newPath) {
-        return new Promise((resolve, reject) => {
+    async copyDirectory(oldPath: string, newPath: string) {
+        return new Promise<ResponseFile>((resolve, reject) => {
             var readStream = fs.createReadStream(oldPath);
             var writeStream = fs.createWriteStream(newPath);
 
-            const cbErr = (err) => resolve(new ResponseFile(FileStatus.ERROR, null, err));
+            const cbErr = (err: Error) => resolve(new ResponseFile(FileStatus.ERROR, null, err));
     
             readStream.on('error', cbErr);
             writeStream.on('error', cbErr);
     
             readStream.on('close', function () {
-                fs.unlink(oldPath, callback);
+                fs.unlink(oldPath, x => {
+                    if (x) {
+                        return resolve(new ResponseFile(FileStatus.ERROR, null, x));
+                    }
+                });
                 resolve(ResponseFile.fromPath(newPath).SUCCESS);
             });
     
@@ -145,8 +147,8 @@ export class FileService {
         })
     }
 
-    async moveFile(oldPath, newPath) {
-        return new Promise((resolve, reject) => {
+    async moveFile(oldPath: string, newPath: string) {
+        return new Promise<ResponseFile>((resolve, reject) => {
             
             if (!fs.existsSync(oldPath)) 
                 return resolve(ResponseFile.NOT_FOUND);
@@ -161,18 +163,18 @@ export class FileService {
         })
     }
 
-    async moveDirectory(oldPath, newPath) {
-        return new Promise((resolve, reject) => {
+    async moveDirectory(oldPath: string, newPath: string) {
+        return new Promise<ResponseFile>((resolve, reject) => {
             reject("Not implemented")
         })
     }
 
-    static async readFile(filePath, encoding = "base64url") {
-        return new Promise((resolve, reject) => {
+    static async readFile(filePath: string, encoding: BufferEncoding = "base64url") {
+        return new Promise<ResponseFile>((resolve, reject) => {
             fs.readFile(filePath, (err, data) => {
                 if (err) {
 
-                    if (["ENOENT", "ENOTDIR"].includes(err.code)) {
+                    if (["ENOENT", "ENOTDIR"].includes(err.code!)) {
                         return reject(ResponseFile.NOT_FOUND);
                     }
 
@@ -185,8 +187,8 @@ export class FileService {
         })
     }
 
-    async log(path, content) {
-        return new Promise(async (resolve, reject) => {
+    async log(path: string, content: string) {
+        return new Promise<ResponseFile>(async (resolve, reject) => {
             const ncontent = `[${new Date().toISOString()}] - ${content}\n`;
             path += ".txt";
             

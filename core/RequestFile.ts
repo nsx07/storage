@@ -2,11 +2,11 @@ import fs from 'fs';
 import path from 'path';
 import { _root, wwwroot } from "../utils.js";
 
-export const FileStatus = Object.freeze({
-    "ERROR": -1,
-    "NOT_FOUND": 1,
-    "SUCCESS": 2,
-});
+export enum FileStatus {
+    ERROR = -1,
+    NOT_FOUND = 1,
+    SUCCESS = 2
+}
 
 export class RequestFile {
 
@@ -15,7 +15,7 @@ export class RequestFile {
     projectName;
     projectScope;
 
-    constructor(fileName, projectName, projectScope) {
+    constructor(fileName: string, projectName: string, projectScope: string) {
         this.fileName = fileName;
         this.projectName = projectName;
         this.projectScope = projectScope;
@@ -25,11 +25,11 @@ export class RequestFile {
     }
 
     async readFile() {
-        return new Promise((resolve, reject) => {
+        return new Promise<ResponseFile>((resolve, reject) => {
             fs.readFile(this.filePath, (err, data) => {
                 if (err) {
 
-                    if (["ENOENT", "ENOTDIR"].includes(err.code)) {
+                    if (["ENOENT", "ENOTDIR"].includes(err.code!)) {
                         return reject(ResponseFile.NOT_FOUND);
                     }
 
@@ -50,17 +50,17 @@ export class RequestFile {
         return RequestFile.preparePath(this.projectName, this.projectScope);
     }
 
-    static validJoin(...args) {
+    static validJoin(...args: string[]) {
 
         if (args.some(a => a === "wwwroot")) {
             return false;
         }
 
-        return args.some(arg => arg instanceof String);
+        return args.some(arg => (arg as any) instanceof String);
     }
 
-    static async preparePath(projectName, projectScope) {
-        return new Promise((resolve, reject) => {
+    static async preparePath(projectName: string, projectScope: string) {
+        return new Promise<ResponseFile>((resolve, reject) => {
             if (!this.validJoin(projectName, projectScope)) {
                 //return reject(new ResponseFile(FileStatus.ERROR, null, "Invalid projectName"));
             }
@@ -76,8 +76,8 @@ export class RequestFile {
         })
     }
 
-    static async deleteFile(filePath) {
-        return new Promise((resolve, reject) => {
+    static async deleteFile(filePath: string) {
+        return new Promise<ResponseFile>((resolve, reject) => {
             
             if (!fs.existsSync(filePath)) {
                 return resolve(ResponseFile.NOT_FOUND);
@@ -98,19 +98,19 @@ export class RequestFile {
 
 export class ResponseFile {
     
-    status;
-    error;
-    data;
-    path;
+    status: FileStatus;
+    error?: null | string | Error;
+    data?: null | string | Buffer;
+    path?: null | string;
 
-    constructor(status, data, error, path) {
+    constructor(status: FileStatus, data?: null | string | Buffer, error?: null | string | Error, path?: null | string) {
         this.status = status;
         this.error = error;
         this.data = data;
         this.path = path;
     }
 
-    static fromPath = (path) => {
+    static fromPath = (path: string) => {
         return {
             SUCCESS: new ResponseFile(FileStatus.SUCCESS, null, null, path),
             ERROR: new ResponseFile(FileStatus.ERROR, null, null, path)

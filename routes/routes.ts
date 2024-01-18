@@ -1,16 +1,9 @@
-import { createDirectory, deleteDirectory, deleteFile, get, listTree, moveDirectory, moveFile, rename, renameFile, save, update, log } from "./storage.js";
+import { createDirectory, deleteDirectory, deleteFile, get, listTree, moveDirectory, moveFile, rename, renameFile, save, update, log, copyFile, copyDirectory } from "./storage.js";
 import { backup, listJobs, restore, removeJob } from "./backup.js";
-import swaggerJson from "../swagger.json" assert { type: "json" };
 import { FileProcessor } from "../core/FileProcessor.js";
-import swaggerUi from "swagger-ui-express";
-import { wwwroot } from "../utils.js";
 import { Router } from "express";
 
 export const router = Router();
-
-//docs
-router.use('/docs', swaggerUi.serve);
-router.get('/docs', swaggerUi.setup(swaggerJson, { explorer: true }));
 
 //storage
 router.put("/log", async (req, res) => log(req, res))

@@ -20,13 +20,13 @@ const MIME_TYPES = {
 };
 
 const methodHandler = {
-    POST: async (req) => {
+    POST: async (req: any): Promise<void> => {
         const request = {
             projectName: req.query.projectName,
             projectScope: req.query.projectScope,
         };
     }, 
-    PUT: async (req) => {
+    PUT: async  (req: any): Promise<void>=> {
         const request = {
             projectName: req.query.projectName,
             projectScope: req.query.projectScope,
@@ -45,23 +45,26 @@ const storage = multer.diskStorage({
     let path;
 
     try {
-      methodHandler[req.method](req);
-      const prepare = await RequestFile.preparePath(req.query.projectName, req.query.projectScope);
+      //@ts-ignore
+      await methodHandler[req.method](req);
+      const prepare = await RequestFile.preparePath((req.query as any).projectName, (req.query as any).projectScope);
       path = prepare.path;
     } catch (error) {
-      req._destroy(error)
+      req._destroy(error as Error, d => {
+        console.log(d);
+      })
 
       console.log(error)
     }
 
-    callback(null, path);
+    callback(null, path!);
 
   },
   filename: (req, file, callback) => {
     const lastDot = file.originalname.lastIndexOf(".");
     const name = file.originalname.slice(0, lastDot).split(" ").join("_");
     const extensionFile = file.originalname.slice(lastDot + 1);
-    const extension = MIME_TYPES[file.mimetype] || 
+    const extension = MIME_TYPES[file.mimetype as keyof typeof MIME_TYPES] || 
                       (Object.values(MIME_TYPES).includes(extensionFile) 
                               ? extensionFile 
                               : "txt");

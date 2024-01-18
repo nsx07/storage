@@ -4,8 +4,7 @@ import process from "process"
 import express from "express";
 import { router } from "./routes/routes.js";
 import { removeCronJob } from "./core/Scheduler.js";
-import { configure } from "./security/configure-auth.js";
-import { isConnect, multipleValuesSamePurpose } from "./utils.js";
+import { multipleValuesSamePurpose } from "./utils.js";
 
 export const app = express();
 
@@ -25,21 +24,9 @@ const env = {
     production: process.env.NODE_ENV === "production"
 }
 
-isConnect().then((isConnect) => {
-    if (!isConnect) {
-        console.log("No Internet Connection")
-    } else {
-        configure(app, env)
-    }
-    
-}).catch((err) => {
-    console.log(err)
-    process.exit(1)
-})
-
 app.listen(env, () => console.log(`Server Running at ${env.host}:${env.port}`))
 
-multipleValuesSamePurpose(["SIGINT", "SIGTERM", "EXIT"], s => process.on(s, x => {
+multipleValuesSamePurpose(["SIGINT", "SIGTERM", "EXIT"], s => process.on(s as string, x => {
     cron.getTasks().forEach((v, k, m) => removeCronJob(k))
     process.exit(0);
 }))

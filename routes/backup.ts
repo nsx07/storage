@@ -3,6 +3,7 @@ import { wwwroot, VALIDATOR, parsePlatformPath } from "../utils.js";
 import { FileService } from "../services/FileService.js";
 import { exec } from "child_process";
 import cron from "node-cron";
+import { Request, Response } from "express";
 
 const fService = new FileService();
 
@@ -16,9 +17,10 @@ const fService = new FileService();
  * }
  * @command pg_dump -F t --dbname=postgresql://postgres:password@localhost:5432/postgres >> file
  */
-export const backup = async (req, res) => {
+export const backup = async (req: Request, res: Response) => {
     try {
 
+        
         const payload = req.body || req.query;
 
         if (payload.name == null || payload.folder == null || payload.connectionString == null) {
@@ -35,7 +37,7 @@ export const backup = async (req, res) => {
         if (cron.getTasks().has(payload.name)) {
 
             console.log(payload.name + " already exists", Array.from(cron.getTasks().keys()));
-            cron.getTasks().get(payload.name).now()
+            cron.getTasks().get(payload.name)!.now()
 
             res.status(200).send(JSON.stringify({
                 message: "backup already scheduled, executed right now and on schedule time too.",
@@ -69,7 +71,7 @@ export const backup = async (req, res) => {
             if (error) {
                 fService.deleteFile(path);
                 console.log(`error: ${error.message}`);
-                res.status(500).send({message: "Error backuping", error: error.message, exception: error.exception});
+                res.status(500).send({message: "Error backuping", error: error.message, exception: error.stack});
                 return;
             }
             
@@ -82,7 +84,7 @@ export const backup = async (req, res) => {
         
     } catch (error) {
         console.log(error);
-        res.status(500).send({message: "Error backuping", error: error.message, exception: error.exception});
+        res.status(500).send({message: "Error backuping", error: (error as Error).name, exception: (error as Error).message});
     }
 }
 
@@ -94,7 +96,7 @@ export const backup = async (req, res) => {
  * }
  * @command pg_restore -F t --no-privileges --no-owner --dbname=postgresql://username:password@host:port/database file
  */
-export const restore = async (req, res) => {
+export const restore = async (req: Request, res: Response) => {
     try {
         const payload = req.body || req.query;
         const path = `${wwwroot}/backup/${payload.folder}/${payload.name}`;
@@ -111,7 +113,7 @@ export const restore = async (req, res) => {
             saveLog("restore " + (error ? "❌" : "✔"), stdout, stderr, command);
             if (error) {
                 console.log(`error: ${error.message}`);
-                res.status(500).send({message: "Error backuping", error: error.message, exception: error.exception});
+                res.status(500).send({message: "Error backuping", error: error.message, exception: error.stack});
                 return;
             }
             
@@ -121,13 +123,13 @@ export const restore = async (req, res) => {
             }))
         })
 
-    } catch (error) {
+} catch (error) {
         console.log(error);
-        res.status(500).send({message: "Error restoring", error: error.message, exception: error.exception});
+        res.status(500).send({message: "Error restoring", error: (error as Error).name, exception: (error as Error).message});
     }
 }
 
-export const removeJob = async (req, res) => {
+export const removeJob = async (req: Request, res: Response) => {
     try {
         const payload = req.body || req.query;
         const removed = removeCronJob(payload.name);
@@ -135,26 +137,26 @@ export const removeJob = async (req, res) => {
             message: removed ? "job removed" : "job not exists",
             status: removed ? "success" : "failed",
         }))
-    } catch (error) {
+} catch (error) {
         console.log(error);
-        res.status(500).send({message: "Error removing job", error: error.message, exception: error.exception});
+        res.status(500).send({message: "Error removing job", error: (error as Error).name, exception: (error as Error).message});
     }
 }
 
-export const listJobs = async (req, res) => {
+export const listJobs = async (req: Request, res: Response) => {
     try {
         res.status(200).send(JSON.stringify({
             data: getJobs(),
             message: "jobs listed",
             status: "success",
         }))
-    } catch (error) {
+} catch (error) {
         console.log(error);
-        res.status(500).send({message: "Error listing jobs", error: error.message, exception: error.exception});
+        res.status(500).send({message: "Error listing jobs", error: (error as Error).name, exception: (error as Error).message});
     }
 }
 
-async function saveLog(message, stdout, stderr, command) {
+async function saveLog(message: string, stdout: string, stderr: string, command: string) {
     const date = new Date();
 
     await fService.createDirectory(`${wwwroot}/backup/logs`);

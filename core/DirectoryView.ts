@@ -1,10 +1,10 @@
 import fs from "fs"
 import path from "path"
-import { stripPath } from "../utils.js";
+import { Complex, stripPath } from "../utils.js";
 
 export class DirectoryView {
 
-    static listFromPath(_path) {
+    static listFromPath(_path: string): Complex {
         const stat = fs.statSync(_path);
 
         if (stat.isDirectory()) {

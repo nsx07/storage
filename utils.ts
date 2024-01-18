@@ -9,23 +9,18 @@ var __dirname = path.dirname(__filename);
 export const _root = __dirname;
 export const wwwroot = path.join(_root, "wwwroot");
 
+export type Complex = unknown;
 
-/**
- * Generates a response file object based on the given request.
- *
- * @param {Object} request - The request object.
- * @param {Array} request.files - The array of files in the request.
- * @param {Object} request.file - The file object in the request.
- * @param {string} request.file.filename - The name of the file.
- * @param {string} request.query.projectName - The name of the project.
- * @param {string} request.query.projectScope - The scope of the project.
- * @param {string} request.file.path - The file path.
- * @return {Object|Array} - The response file object or array of response file objects.
- */
-export const prepareResponseFile = (request) => {
+export type FileRespose = {
+    files: Array<{ filename: string, path: string }>
+    file: { filename: string, path: string }
+    query: { projectName: any, projectScope: any }
+}
+
+export const prepareResponseFile = (request: FileRespose | any) => {
 
     if (request.files) {
-        return request.files.map(file => {
+        return request.files.map((file: any) => {
             return {
                 fileName: file.filename,
                 projectName: request.query.projectName,
@@ -48,7 +43,12 @@ export function stripPath(_path = "") {
     return parsePlatformPath(_path.slice(_path.indexOf("wwwroot") + 7));
 }
 
-export function convertObjectUrlParsed(obj, isFile = false) { 
+export type UrlObject = {
+    projectName: string,
+    projectScope: string,
+    fileName: string
+}
+export function convertObjectUrlParsed(obj: Partial<UrlObject>, isFile = false) { 
     let url = wwwroot;
 
     if (obj.projectName) {
@@ -67,7 +67,7 @@ export function convertObjectUrlParsed(obj, isFile = false) {
     return parsePlatformPath(url);
 }
 
-export function convertUrlParsedObject(url) {
+export function convertUrlParsedObject(url: string) {
     let urlParsed = url.split("/").filter((value) => value != "");
     
     let projectName = parsePlatformPath(urlParsed[0]);
@@ -81,7 +81,7 @@ export function convertUrlParsedObject(url) {
     return { projectName, projectScope, fileName };
 }
 
-export function parsePlatformPath(path) {
+export function parsePlatformPath(path: string) {
     const reg = new RegExp(`[\/\\\\]+`, "g");
     if (detectPlatform() == "win32") {
         return path.replaceAll(reg, "\\");
@@ -90,7 +90,7 @@ export function parsePlatformPath(path) {
     }
 }
 
-export function parsePlatformPathWithRoot(path) {
+export function parsePlatformPathWithRoot(path: string) {
     return parsePlatformPath(wwwroot + "/" + path);
 }
 
@@ -115,27 +115,27 @@ export async function isConnect() {
 }
 
 export const VALIDATOR = {
-    critical : (path) => {
+    critical : (path: string) => {
         preventPathTraversal(path);
         preventRootExclusion(path);
         return path;
     }
 }
 
-function preventPathTraversal(path) {
+function preventPathTraversal(path: string) {
     if (path.includes("..")) {
         throw new Error("path traversal is not allowed");
     }
 }
 
-function preventRootExclusion(path) {
+function preventRootExclusion(path: string) {
     if (path === wwwroot) {
         throw new Error("root cannot change!");
     }
 }
 
 
-export const multipleValuesSamePurpose = (values, call) => {
+export const multipleValuesSamePurpose = <T = unknown>(values: T[], call: (value: T) => void) => {
     for (let value of values) {
         call(value);
     }
