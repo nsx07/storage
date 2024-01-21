@@ -1,5 +1,5 @@
 import { createDirectory, deleteDirectory, deleteFile, get, listTree, moveDirectory, moveFile, rename, renameFile, save, update, log, copyFile, copyDirectory, validateToken } from "./storage.js";
-import { backup, listJobs, restore, removeJob } from "./backup.js";
+import { backup, listJobs, restore, removeJob, listBackups } from "./backup.js";
 import { FileProcessor } from "../core/FileProcessor.js";
 import { Router } from "express";
 
@@ -27,3 +27,4 @@ router.post("/backup", async (req, res) => backup(req, res))
 router.post("/restore", async (req, res) => restore(req, res))
 router.post("/removeJob", async (req, res) => removeJob(req, res))
 router.get("/listJobs", async (req, res) => listJobs(req, res))
+router.get("/listBackups", async (req, res) => listBackups(req, res))

@@ -7,8 +7,8 @@ let client: RedisClientType;
 
 export const CacheService = {
     connect: async (options?: RedisClientOptions) => {
-        options = {legacyMode: false, ...options}
-        client = createClient(options) as RedisClientType;
+        options = {legacyMode: false, url: "redis://default:nCIImmnp5AgKHE3IMOBmHAggGIGMDhdi@viaduct.proxy.rlwy.net:42670", ...options}
+        client = createClient({url: "redis://default:nCIImmnp5AgKHE3IMOBmHAggGIGMDhdi@viaduct.proxy.rlwy.net:42670"}) as RedisClientType;
         client.on('error', err => console.log('Redis Client Error', err));
         await client.connect();
     },

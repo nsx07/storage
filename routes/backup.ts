@@ -1,6 +1,6 @@
 import { getJobs, removeCronJob, setCronJon } from "../core/Scheduler.js";
 import { wwwroot, VALIDATOR, parsePlatformPath } from "../utils.js";
-import { BackupService } from "../services/BackupService.js";
+import { BackupOptions, BackupService } from "../services/BackupService.js";
 import { FileService } from "../services/FileService.js";
 import { Request, Response } from "express";
 import { exec } from "child_process";
@@ -93,5 +93,24 @@ export const listJobs = async (req: Request, res: Response) => {
 } catch (error) {
         console.log(error);
         res.status(500).send({message: "Error listing jobs", error: (error as Error).name, exception: (error as Error).message});
+    }
+}
+
+export const listBackups = async (req: Request, res: Response) => {
+    try {
+        let schedulesKeys = await CacheService.keys("backup:*");
+
+        let schedules: BackupOptions[] = [];
+        for (let key of schedulesKeys) {
+            let schedule = await CacheService.get(key, false);
+            if (schedule) {
+                schedule.key = key;
+                schedules.push(JSON.parse(schedule));
+            }
+        }
+    
+        res.status(200).send(JSON.stringify({keys: schedulesKeys, schedules}));
+    } catch (error) {
+        res.status(500).send({message: "Error listing backups", error: (error as Error).name, exception: (error as Error).message});
     }
 }
