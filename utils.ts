@@ -140,3 +140,7 @@ export const multipleValuesSamePurpose = <T = unknown>(values: T[], call: (value
         call(value);
     }
 }
+
+export const isObject = (value: unknown) => {
+    return typeof value === "object" && value !== null;
+}
