@@ -104,8 +104,10 @@ export const listBackups = async (req: Request, res: Response) => {
         for (let key of schedulesKeys) {
             let schedule = await CacheService.get(key, false);
             if (schedule) {
-                schedule.key = key;
-                schedules.push(JSON.parse(schedule));
+                let parsed = JSON.parse(schedule);                 
+
+                parsed.key = key;
+                schedules.push(parsed);
             }
         }
     
