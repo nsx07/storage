@@ -74,7 +74,7 @@ export const removeBackup = async (req: Request, res: Response) => {
         console.log(payload);
 
         if (payload.name) {
-            res.status(400).send({message: "Name is required.", hasError: true);
+            res.status(400).send({message: "Name is required.", hasError: true});
             return;    
         }
         const removed = removeCronJob(payload.name);
