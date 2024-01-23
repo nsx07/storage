@@ -71,8 +71,10 @@ export const restore = async (req: Request, res: Response) => {
 export const removeBackup = async (req: Request, res: Response) => {
     try {
         const payload = req.body || req.query;
-        const removed = removeCronJob(bService.parseTaskName(payload.name));
-        await CacheService.del(bService.parseTaskName(payload.name));
+        const key = bService.parseTaskName(payload.name);
+        console.log(payload, key)
+        const removed = removeCronJob(payload.name);
+        await CacheService.del(payload.name);
         res.status(removed ? 200 : 200).send(JSON.stringify({
             message: removed ? "job removed" : "job not exists",
             status: removed ? "success" : "failed",
