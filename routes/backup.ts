@@ -70,7 +70,7 @@ export const restore = async (req: Request, res: Response) => {
 
 export const removeBackup = async (req: Request, res: Response) => {
     try {
-        const keyName = req.query.name;
+        const keyName = req.query.name as string;
         console.log(keyName);
 
         if (!keyName) {
