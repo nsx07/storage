@@ -10,6 +10,7 @@ export type BackupOptions = {
     zip?: boolean;
     cron?: string;
     folder: string;
+    key?: string
     // this does not accept command injection, its just encapsulate the command to be executed after reboot or crash
     command?: string;
     continuos?: boolean;
@@ -36,7 +37,11 @@ export class BackupService {
                     return;
                 }
             })
-        }, payload.name, payload);
+        }, payload.name.includes("backup:") ? payload.name : `backup:${payload.name}`, payload);
+    }
+
+    parseTaskName(name: string) {
+        return name.includes("backup:") ? name : `backup:${name}`
     }
 
     async backup(payload: BackupOptions) {
@@ -70,6 +75,7 @@ export class BackupService {
             if (payload.continuos) {
     
                 payload.command = command;
+                payload.key = `backup:${payload.name}`
                 let scheduler = await this.scheduleBackup(payload);
 
                 if (scheduler.hasError) {
@@ -80,7 +86,7 @@ export class BackupService {
                     });
                 }
     
-                CacheService.set(`backup:${payload.name}`, JSON.stringify(payload));
+                CacheService.set(payload.key, JSON.stringify(payload));
             }
     
             try {
