@@ -71,14 +71,12 @@ export const restore = async (req: Request, res: Response) => {
 export const removeBackup = async (req: Request, res: Response) => {
     try {
         const payload = req.body || req.query;
-        console.log(payload)
+        console.log(payload);
 
         if (payload.name) {
-            res.status(400).send({message: "Error removing job", error: 'Name is required.');
+            res.status(400).send({message: "Name is required.", hasError: true);
             return;    
         }
-        
-        console.log(payload, key)
         const removed = removeCronJob(payload.name);
         await CacheService.del(payload.name);
         res.status(removed ? 200 : 200).send(JSON.stringify({
