@@ -142,7 +142,7 @@ export const updateBackup = async (req: Request, res: Response) => {
 
             multipleValuesSamePurpose([payload.key, payload.key.split(":")[0] ?? "nan", payload.name], x => removeCronJob(x));
             
-            bService.backup(parsed)
+            bService.backup(parsed, true)
                 .then(result => {
                     res.status(200).send(JSON.stringify(result));
                 })

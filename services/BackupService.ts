@@ -44,7 +44,7 @@ export class BackupService {
         return name.includes("backup:") ? name : `backup:${name}`
     }
 
-    async backup(payload: BackupOptions) {
+    async backup(payload: BackupOptions, update = false) {
         return new Promise(async (resolve, reject) => {
             if (payload.name == null || payload.folder == null || payload.connectionString == null) {
                 return reject({
@@ -70,7 +70,7 @@ export class BackupService {
             await this.fService.createDirectory(`${wwwroot}/backup`);
             await this.fService.createDirectory(`${wwwroot}/backup/${payload.folder}`);
     
-            const command = `pg_dump ${ !payload.zip ? "-F t" : ""} --dbname=${payload.connectionString} >> ${path} `;
+            const command = `pg_dump ${ payload.zip ? "-F t" : ""} --dbname=${payload.connectionString} >> ${path} `;
     
             if (payload.continuos) {
     
@@ -89,24 +89,32 @@ export class BackupService {
                 CacheService.set(payload.key, JSON.stringify(payload));
             }
     
-            try {
-                exec(command, (error, stdout, stderr) => {
-                    this.saveLog("dump " + (error ? "❌" : "✔"), stdout, stderr, command);
-        
-                    if (error) {
-                        this.fService.deleteFile(path);
-                        console.log(`error exec: ${error.message}`);
-                        return reject(error);
-                    }
-                    
-                    return resolve({
-                        message: "backup done",
-                        status: "success",
-                        error: false
-                    });
-                })
-            } catch (error) {
-                return reject(error);
+            if (update) {
+                return resolve({
+                    message: "backup updated",
+                    status: "success",
+                    error: false
+                });
+            } else {
+                try {
+                    exec(command, (error, stdout, stderr) => {
+                        this.saveLog("dump " + (error ? "❌" : "✔"), stdout, stderr, command);
+            
+                        if (error) {
+                            this.fService.deleteFile(path);
+                            console.log(`error exec: ${error.message}`);
+                            return reject(error);
+                        }
+                        
+                        return resolve({
+                            message: "backup done",
+                            status: "success",
+                            error: false
+                        });
+                    })
+                } catch (error) {
+                    return reject(error);
+                }
             }
         })
     }
