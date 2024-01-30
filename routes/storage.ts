@@ -341,3 +341,31 @@ export const validateToken = (req: Request, res: Response) => {
 
     res.status(200).send({ success: true, message: "Token validated" })
 }
+
+export const downloadZip = async (req: Request, res: Response) => {
+    try {
+        const {path, out} = req.query;
+
+        const result = await fservice.zipDirectory(VALIDATOR.critical(path as string), VALIDATOR.critical(out as string));
+        
+        if (result.status != FileStatus.SUCCESS) {
+            return res.status(500).send({message: "Error downloading zip", error: result.error});
+        }
+        
+        if (!fservice.fileExists(result.path!)) {
+            return res.status(500).send({message: "Error reading zip", error: result.error});
+        }
+
+        const fileZip = fservice.readFile(result.path!);
+        
+        res.status(200).send(JSON.stringify({
+            dataZip: fileZip,
+            path: result.path,
+            status: result.status,
+        }))
+        
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({message: "Error downloading zip", error: (error as Error).name, exception: (error as Error).message});
+    }
+}

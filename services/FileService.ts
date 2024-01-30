@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import { wwwroot } from "../utils.js";
 import { ResponseFile, FileStatus, RequestFile } from "../core/RequestFile.js";
+import { Zipper } from "core/Zipper.js";
 
 export class FileService {
 
@@ -12,7 +13,7 @@ export class FileService {
     }
 
     fileExists(filePath: string) {
-        return fs.existsSync(filePath);
+        return [null, undefined, ""].every(x => x != filePath) && fs.existsSync(filePath);
     }
 
     async createFile(filePath: string, data: string) {
@@ -206,6 +207,42 @@ export class FileService {
             }
 
         })
+    }
+
+    async readFile(filePath: string, encoding: BufferEncoding = "hex") {
+        return new Promise<ResponseFile>((resolve, reject) => {
+            fs.readFile(filePath, (err, data) => {
+                if (err) {
+
+                    if (["ENOENT", "ENOTDIR"].includes(err.code!)) {
+                        return reject(ResponseFile.NOT_FOUND);
+                    }
+
+                    return reject(new ResponseFile(FileStatus.ERROR, null, err));
+
+                }
+
+                return resolve(new ResponseFile(FileStatus.SUCCESS, data.toString(encoding), err));
+            })
+        })
+    }
+
+    async zipDirectory(directory: string, out: string) {
+        return Zipper.zipDirectory(directory, out)
+            .then(z => z ? ResponseFile.fromPath(out).SUCCESS : ResponseFile.fromPath(out).ERROR)
+            .catch(err => ResponseFile.fromPath(out).ERROR);
+    }
+
+    async zipFile(files: string[], out: string) {
+        return Zipper.zipFile(files, out)
+            .then(z => z ? ResponseFile.fromPath(out).SUCCESS : ResponseFile.fromPath(out).ERROR)
+            .catch(err => ResponseFile.fromPath(out).ERROR);
+    }
+
+    async unzipDirectory(source: string, out: string) {
+        return Zipper.unzipDirectory(source, out)
+            .then(z => z ? ResponseFile.fromPath(out).SUCCESS : ResponseFile.fromPath(out).ERROR)
+            .catch(err => ResponseFile.fromPath(out).ERROR);
     }
 
 }
