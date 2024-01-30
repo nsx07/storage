@@ -115,9 +115,9 @@ export async function isConnect() {
 }
 
 export const VALIDATOR = {
-    critical : (path: string) => {
+    critical : (path: string, isDelete = true) => {
         preventPathTraversal(path);
-        preventRootExclusion(path);
+        isDelete && preventRootExclusion(path);
         return path;
     }
 }

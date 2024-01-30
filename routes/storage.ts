@@ -3,6 +3,7 @@ import { FileStatus, RequestFile } from "../core/RequestFile.js";
 import { DirectoryView } from "../core/DirectoryView.js";
 import { FileService } from "../services/FileService.js";
 import { Request, Response } from "express";
+import path from "path";
 
 const fservice = new FileService();
 
@@ -344,9 +345,11 @@ export const validateToken = (req: Request, res: Response) => {
 
 export const downloadZip = async (req: Request, res: Response) => {
     try {
-        const {path, out} = req.query;
+        const query = req.query;
 
-        const result = await fservice.zipDirectory(VALIDATOR.critical(path as string), VALIDATOR.critical(out as string));
+        let out = `${wwwroot}/temp_${Date.now()}.zip`
+        
+        const result = await fservice.zipDirectory(VALIDATOR.critical(path.join(wwwroot, query.path as string), false), out);
         
         if (result.status != FileStatus.SUCCESS) {
             return res.status(500).send({message: "Error downloading zip", error: result.error});
@@ -356,10 +359,12 @@ export const downloadZip = async (req: Request, res: Response) => {
             return res.status(500).send({message: "Error reading zip", error: result.error});
         }
 
-        const fileZip = fservice.readFile(result.path!);
+        const fileZip = await fservice.readFile(result.path!, "base64");
+
+        fservice.deleteFile(result.path!);
         
         res.status(200).send(JSON.stringify({
-            dataZip: fileZip,
+            dataZip: fileZip.data,
             path: result.path,
             status: result.status,
         }))

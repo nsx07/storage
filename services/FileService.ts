@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import { wwwroot } from "../utils.js";
 import { ResponseFile, FileStatus, RequestFile } from "../core/RequestFile.js";
-import { Zipper } from "core/Zipper.js";
+import { Zipper } from "../core/Zipper.js";
 
 export class FileService {
 
