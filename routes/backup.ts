@@ -127,7 +127,8 @@ export const listBackups = async (req: Request, res: Response) => {
 export const updateBackup = async (req: Request, res: Response) => {
     try {
         const payload = req.body || req.query;
-        const backup = await CacheService.get(bService.parseTaskName(payload.key), false);
+        const keys = {job: bService.parseJobName(payload.key), task: bService.parseTaskName(payload.key)};
+        const backup = await CacheService.get(keys.task, false);
         if (backup) {
             let parsed = JSON.parse(backup);
             
@@ -140,7 +141,7 @@ export const updateBackup = async (req: Request, res: Response) => {
             
             await CacheService.del(payload.key);
 
-            multipleValuesSamePurpose([payload.key, payload.key.split(":")[0] ?? "nan", payload.name], x => removeCronJob(x));
+            multipleValuesSamePurpose([keys.job, keys.task, payload.key, payload.name], x => removeCronJob(x));
             
             bService.backup(parsed, true)
                 .then(result => {

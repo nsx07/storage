@@ -38,9 +38,17 @@ async function reUpCronJobs() {
     
     jobs.forEach(async job => {
         const payload = JSON.parse(await CacheService.get(job, false));
+        
         console.log(payload);
         
         if (payload) {
+            const path = bService.retrievePathFromCommand(payload.command!);
+            
+            if (!payload.path) {
+                payload.path = path;
+                CacheService.set(job, JSON.stringify(payload));
+            }
+            
             bService.scheduleBackup(payload);
         }
         

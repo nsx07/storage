@@ -10,7 +10,8 @@ export type BackupOptions = {
     zip?: boolean;
     cron?: string;
     folder: string;
-    key?: string
+    key?: string;
+    path: string;
     // this does not accept command injection, its just encapsulate the command to be executed after reboot or crash
     command?: string;
     continuos?: boolean;
@@ -29,6 +30,11 @@ export class BackupService {
 
     scheduleBackup(payload: BackupOptions) : Promise<ScheduleResult> {
         return setCronJon(() => {
+
+            if (payload.path && this.fService.fileExists(payload.path)) {
+                this.fService.deleteFile(payload.path);
+            }
+
             exec(payload.command!, (error, stdout, stderr) => {
                 this.saveLog("dump " + (error ? "❌" : "✔"), stdout, stderr, payload.command!);
                 
@@ -42,6 +48,10 @@ export class BackupService {
 
     parseTaskName(name: string) {
         return name.includes("backup:") ? name : `backup:${name}`
+    }
+
+    parseJobName(name: string) {
+        return name.includes("backup:") ? name.split(":")[1] : name;
     }
 
     async backup(payload: BackupOptions, update = false) {
@@ -74,6 +84,7 @@ export class BackupService {
     
             if (payload.continuos) {
     
+                payload.path = path;
                 payload.command = command;
                 payload.key = `backup:${payload.name}`
                 let scheduler = await this.scheduleBackup(payload);
@@ -97,6 +108,7 @@ export class BackupService {
                 });
             } else {
                 try {
+                    this.fService.fileExists(path) && this.fService.deleteFile(path);
                     exec(command, (error, stdout, stderr) => {
                         this.saveLog("dump " + (error ? "❌" : "✔"), stdout, stderr, command);
             
@@ -159,6 +171,10 @@ export class BackupService {
          \n[${date}] stderr: ${stderr}
          \n===============OUTPUT END =================
         `);
+    }
+
+    retrievePathFromCommand(command: string) {
+        return command.split(">>")[1].trim();
     }
 
 }

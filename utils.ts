@@ -135,9 +135,11 @@ function preventRootExclusion(path: string) {
 }
 
 
-export const multipleValuesSamePurpose = <T = unknown>(values: T[], call: (value: T) => void) => {
+export const multipleValuesSamePurpose = <T = unknown>(values: T[], call: (value: T) => void | boolean, singleMatch = false) => {
     for (let value of values) {
-        call(value);
+        if (call(value) && singleMatch) {
+            return;
+        }
     }
 }
 
