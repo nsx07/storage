@@ -77,9 +77,11 @@ export const removeBackup = async (req: Request, res: Response) => {
             res.status(400).send({message: "Name is required.", hasError: true});
             return;    
         }
+
+        const keys = {job: bService.parseJobName(keyName), task: bService.parseTaskName(keyName)};
         
-        const removed = removeCronJob(keyName);
-        await CacheService.del(keyName);
+        const removed = removeCronJob(keys.job);
+        await CacheService.del(keys.task);
         res.status(removed ? 200 : 200).send(JSON.stringify({
             message: removed ? "job removed" : "job not exists",
             status: removed ? "success" : "failed",
