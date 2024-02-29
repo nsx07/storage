@@ -31,9 +31,8 @@ export class BackupService {
     scheduleBackup(payload: BackupOptions) : Promise<ScheduleResult> {
         return setCronJon(() => {
 
-            if (payload.path && this.fService.fileExists(payload.path)) {
-                this.fService.deleteFile(payload.path);
-            }
+            const tempath = `${wwwroot}/backup/${payload.folder}/temp_${Date.now()}`;
+            payload.command = this.replaceCommandPath(payload.command, tempath);
 
             exec(payload.command!, (error, stdout, stderr) => {
                 this.saveLog("dump " + (error ? "❌" : "✔"), stdout, stderr, payload.command!);
@@ -41,6 +40,11 @@ export class BackupService {
                 if (error) {
                     console.log(`error: ${error.message}`);
                     return;
+                } else {
+                    if (payload.path && this.fService.fileExists(payload.path)) {
+                        this.fService.deleteFile(payload.path);
+                        this.fService.rename(tempath, payload.path)
+                    }
                 }
             })
         }, payload.name.includes("backup:") ? payload.name : `backup:${payload.name}`, payload);
@@ -64,10 +68,10 @@ export class BackupService {
             }
     
             // must not contain file extension
-            payload.name = payload.name.split(".")[0];
+            payload.name = payload.name.substring(payload.name.lastIndexOf("."));
             const path = `${wwwroot}/backup/${payload.folder}/${payload.name}`;        
             if (cron.getTasks().has(payload.name)) {
-                console.log(payload.name + " already exists", Array.from(cron.getTasks().keys()));
+                console.log(payload.name + " already exists ", Array.from(cron.getTasks().keys()));
                 cron.getTasks().get(payload.name)!.now()
     
                 return resolve({
@@ -107,8 +111,9 @@ export class BackupService {
                     error: false
                 });
             } else {
-                try {
-                    this.fService.fileExists(path) && this.fService.deleteFile(path);
+                try {                
+                    const tempath = `${wwwroot}/backup/${payload.folder}/temp_${Date.now()}`;
+                    command = this.replaceCommandPath(command, tempath);
                     exec(command, (error, stdout, stderr) => {
                         this.saveLog("dump " + (error ? "❌" : "✔"), stdout, stderr, command);
             
@@ -116,6 +121,11 @@ export class BackupService {
                             this.fService.deleteFile(path);
                             console.log(`error exec: ${error.message}`);
                             return reject(error);
+                        } 
+
+                        if (payload.path && this.fService.fileExists(payload.path)) {
+                            this.fService.deleteFile(payload.path);
+                            this.fService.rename(tempath, payload.path)
                         }
                         
                         return resolve({
@@ -175,6 +185,10 @@ export class BackupService {
 
     retrievePathFromCommand(command: string) {
         return command.split(">>")[1].trim();
+    }
+
+    replaceCommandPath(command: string, replace: string) {
+        return command.split(command.lastIndexOf(">>"))[0].trim() + ` ${replace}`
     }
 
 }
