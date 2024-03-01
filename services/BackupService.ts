@@ -84,7 +84,7 @@ export class BackupService {
             await this.fService.createDirectory(`${wwwroot}/backup`);
             await this.fService.createDirectory(`${wwwroot}/backup/${payload.folder}`);
     
-            const command = `pg_dump ${ payload.zip ? "-F t" : ""} --dbname=${payload.connectionString} >> ${path} `;
+            let command = `pg_dump ${ payload.zip ? "-F t" : ""} --dbname=${payload.connectionString} >> ${path} `;
     
             if (payload.continuos) {
     
