@@ -32,7 +32,7 @@ export class BackupService {
         return setCronJon(() => {
 
             const tempath = `${wwwroot}/backup/${payload.folder}/temp_${Date.now()}`;
-            payload.command = this.replaceCommandPath(payload.command, tempath);
+            payload.command = this.replaceCommandPath(payload.command as string, tempath);
 
             exec(payload.command!, (error, stdout, stderr) => {
                 this.saveLog("dump " + (error ? "❌" : "✔"), stdout, stderr, payload.command!);
@@ -188,7 +188,7 @@ export class BackupService {
     }
 
     replaceCommandPath(command: string, replace: string) {
-        return command.split(command.lastIndexOf(">>"))[0].trim() + ` ${replace}`
+        return command.split(">>")[0].trim() + ` ${replace}`
     }
 
 }
