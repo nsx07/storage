@@ -188,7 +188,7 @@ export class BackupService {
     }
 
     replaceCommandPath(command: string, replace: string) {
-        return command.split(">>")[0].trim() + ` ${replace}`
+        return command.split(">>")[0].trim() + ` >> ${replace}`
     }
 
 }
