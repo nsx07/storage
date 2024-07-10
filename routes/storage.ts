@@ -422,10 +422,10 @@ export const validateToken = (req: Request, res: Response) => {
   const valid = validateTokenProvider(token as string);
 
   if (valid.success) {
-    return res.status(200).json({ message: valid.message });
+    return res.status(200).json({ message: valid.message, success: true });
   }
 
-  return res.status(401).json({ message: valid.message });
+  return res.status(401).json({ message: valid.message, success: false });
 };
 
 export const downloadZip = async (req: Request, res: Response) => {
