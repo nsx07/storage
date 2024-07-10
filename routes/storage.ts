@@ -11,6 +11,7 @@ import { DirectoryView } from "../core/DirectoryView.js";
 import { FileService } from "../services/FileService.js";
 import { Request, Response } from "express";
 import path from "path";
+import { validateTokenProvider } from "../core/auth.js";
 
 const fservice = new FileService();
 
@@ -92,13 +93,11 @@ export const get = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.log(error);
-    res
-      .status(500)
-      .send({
-        message: "Error getting file",
-        error: (error as Error).name,
-        exception: (error as Error).message,
-      });
+    res.status(500).send({
+      message: "Error getting file",
+      error: (error as Error).name,
+      exception: (error as Error).message,
+    });
   }
 };
 
@@ -139,13 +138,11 @@ export const deleteFile = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.log(error);
-    res
-      .status(500)
-      .send({
-        message: "Error deleting file",
-        error: (error as Error).name,
-        exception: (error as Error).message,
-      });
+    res.status(500).send({
+      message: "Error deleting file",
+      error: (error as Error).name,
+      exception: (error as Error).message,
+    });
   }
 };
 
@@ -178,13 +175,11 @@ export const createDirectory = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.log(error);
-    res
-      .status(500)
-      .send({
-        message: "Error creating directory",
-        error: (error as Error).name,
-        exception: (error as Error).message,
-      });
+    res.status(500).send({
+      message: "Error creating directory",
+      error: (error as Error).name,
+      exception: (error as Error).message,
+    });
   }
 };
 
@@ -209,13 +204,11 @@ export const deleteDirectory = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.log(error);
-    res
-      .status(500)
-      .send({
-        message: "Error deleting directory",
-        error: (error as Error).name,
-        exception: (error as Error).message,
-      });
+    res.status(500).send({
+      message: "Error deleting directory",
+      error: (error as Error).name,
+      exception: (error as Error).message,
+    });
   }
 };
 
@@ -241,13 +234,11 @@ export const rename = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.log(error);
-    res
-      .status(500)
-      .send({
-        message: "Error renaming directory",
-        error: (error as Error).name,
-        exception: (error as Error).message,
-      });
+    res.status(500).send({
+      message: "Error renaming directory",
+      error: (error as Error).name,
+      exception: (error as Error).message,
+    });
   }
 };
 
@@ -272,13 +263,11 @@ export const renameFile = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.log(error);
-    res
-      .status(500)
-      .send({
-        message: "Error renaming file",
-        error: (error as Error).name,
-        exception: (error as Error).message,
-      });
+    res.status(500).send({
+      message: "Error renaming file",
+      error: (error as Error).name,
+      exception: (error as Error).message,
+    });
   }
 };
 
@@ -303,13 +292,11 @@ export const moveFile = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.log(error);
-    res
-      .status(500)
-      .send({
-        message: "Error moving file",
-        error: (error as Error).name,
-        exception: (error as Error).message,
-      });
+    res.status(500).send({
+      message: "Error moving file",
+      error: (error as Error).name,
+      exception: (error as Error).message,
+    });
   }
 };
 
@@ -334,13 +321,11 @@ export const moveDirectory = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.log(error);
-    res
-      .status(500)
-      .send({
-        message: "Error moving directory",
-        error: (error as Error).name,
-        exception: (error as Error).message,
-      });
+    res.status(500).send({
+      message: "Error moving directory",
+      error: (error as Error).name,
+      exception: (error as Error).message,
+    });
   }
 };
 
@@ -365,13 +350,11 @@ export const copyFile = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.log(error);
-    res
-      .status(500)
-      .send({
-        message: "Error copying file",
-        error: (error as Error).name,
-        exception: (error as Error).message,
-      });
+    res.status(500).send({
+      message: "Error copying file",
+      error: (error as Error).name,
+      exception: (error as Error).message,
+    });
   }
 };
 
@@ -396,13 +379,11 @@ export const copyDirectory = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.log(error);
-    res
-      .status(500)
-      .send({
-        message: "Error copying directory",
-        error: (error as Error).name,
-        exception: (error as Error).message,
-      });
+    res.status(500).send({
+      message: "Error copying directory",
+      error: (error as Error).name,
+      exception: (error as Error).message,
+    });
   }
 };
 
@@ -427,30 +408,24 @@ export const log = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.log(error);
-    res
-      .status(500)
-      .send({
-        message: "Error logging",
-        error: (error as Error).name,
-        exception: (error as Error).message,
-      });
+    res.status(500).send({
+      message: "Error logging",
+      error: (error as Error).name,
+      exception: (error as Error).message,
+    });
   }
 };
 
 export const validateToken = (req: Request, res: Response) => {
   const token = req.query.token;
 
-  if (!token) {
-    res.status(400).send({ success: false, message: "Token is missing" });
-    return;
+  const valid = validateTokenProvider(token as string);
+
+  if (valid.success) {
+    return res.status(200).json({ message: valid.message });
   }
 
-  if (token != process.env.STORAGE_TOKEN) {
-    res.status(401).send({ success: false, message: "Token is invalid" });
-    return;
-  }
-
-  res.status(200).send({ success: true, message: "Token validated" });
+  return res.status(401).json({ message: valid.message });
 };
 
 export const downloadZip = async (req: Request, res: Response) => {
@@ -487,12 +462,10 @@ export const downloadZip = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.log(error);
-    res
-      .status(500)
-      .send({
-        message: "Error downloading zip",
-        error: (error as Error).name,
-        exception: (error as Error).message,
-      });
+    res.status(500).send({
+      message: "Error downloading zip",
+      error: (error as Error).name,
+      exception: (error as Error).message,
+    });
   }
 };

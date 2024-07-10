@@ -11,13 +11,20 @@ export const wwwroot = path.join(_root, "wwwroot");
 
 export type Complex = unknown;
 
-export type FileRespose = {
+export type FileRequest = {
     files: Array<{ filename: string, path: string }>
     file: { filename: string, path: string }
     query: { projectName: any, projectScope: any }
 }
 
-export const prepareResponseFile = (request: FileRespose | any) => {
+export type FileResponse = {
+    fileName: string,
+    projectName: string,
+    projectScope: string,
+    filePath: string
+}
+
+export const prepareResponseFile = (request: FileRequest | any) : FileResponse | FileResponse[] => {
 
     if (request.files) {
         return request.files.map((file: any) => {
