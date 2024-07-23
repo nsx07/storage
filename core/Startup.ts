@@ -12,9 +12,10 @@ export async function startup(app: Application, env: Record<string, unknown>) {
 
   await isConnect()
     .then(async () => {
-      CacheService.connect(
+      await CacheService.connect(
         env.production ? { url: process.env["REDIS_URL"] as string } : undefined
       );
+      await reUpCronJobs();
     })
     .catch((err) => {
       try {
@@ -25,8 +26,6 @@ export async function startup(app: Application, env: Record<string, unknown>) {
         process.exit(1);
       }
     });
-
-  await reUpCronJobs();
 }
 
 async function reUpCronJobs() {

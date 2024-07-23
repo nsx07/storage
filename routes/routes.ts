@@ -27,7 +27,6 @@ import {
 import { FileProcessor } from "./../core/FileProcessor.js";
 import { Router } from "express";
 import { auth } from "./../middleware/auth.js";
-import { cache } from "./../middleware/cache.js";
 import { CacheService } from "./../services/CacheService.js";
 
 export const router = Router();
@@ -59,77 +58,28 @@ router.delete("/deleteDirectory", auth, async (req, res) =>
 );
 
 //backup
-router.post(
-  "/backup",
-  auth,
-  cache.open,
-  async (req, res, n) => {
-    await backup(req, res);
-    n();
-  },
-  cache.close
-);
-router.post(
-  "/restore",
-  auth,
-  cache.open,
-  async (req, res, n) => {
-    await restore(req, res);
-    n();
-  },
-  cache.close
-);
-router.delete(
-  "/removeBackup",
-  auth,
-  cache.open,
-  async (req, res, n) => {
-    await removeBackup(req, res);
-    n();
-  },
-  cache.close
-);
-router.get(
-  "/listJobs",
-  auth,
-  cache.open,
-  async (req, res, n) => {
-    await listJobs(req, res);
-    n();
-  },
-  cache.close
-);
-router.get(
-  "/listBackups",
-  auth,
-  cache.open,
-  async (req, res, n) => {
-    await listBackups(req, res);
-    n();
-  },
-  cache.close
-);
-router.post(
-  "/updateBackup",
-  auth,
-  cache.open,
-  async (req, res, n) => {
-    await updateBackup(req, res);
-    n();
-  },
-  cache.close
-);
-router.get(
-  "/test",
-  auth,
-  cache.open,
-  async (req, res, n) => {
-    await CacheService.test();
-    res.json({
-      message: "Tested",
-      data: await CacheService.get("user-session:123"),
-    });
-    n();
-  },
-  cache.close
-);
+router.post("/backup", auth, async (req, res) => {
+  await backup(req, res);
+});
+router.post("/restore", auth, async (req, res) => {
+  await restore(req, res);
+});
+router.delete("/removeBackup", auth, async (req, res) => {
+  await removeBackup(req, res);
+});
+router.get("/listJobs", auth, async (req, res) => {
+  await listJobs(req, res);
+});
+router.get("/listBackups", auth, async (req, res) => {
+  await listBackups(req, res);
+});
+router.post("/updateBackup", auth, async (req, res) => {
+  await updateBackup(req, res);
+});
+router.get("/test", auth, async (req, res) => {
+  await CacheService.test();
+  res.json({
+    message: "Tested",
+    data: await CacheService.get("user-session:123"),
+  });
+});

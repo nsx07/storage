@@ -27,7 +27,7 @@ export const CacheService = {
   },
   set: async (key: string, value: string | any) => {
     return isObject(value)
-      ? await client.hSet(key, value)
+      ? await client.hSet(key, value as any)
       : await client.set(key, value);
   },
   del: async (key: string) => {
@@ -40,4 +40,5 @@ export const CacheService = {
   disconnect: async () => {
     await client.disconnect();
   },
+  isConnected: () => client.isOpen,
 };
