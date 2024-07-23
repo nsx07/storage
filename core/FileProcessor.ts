@@ -66,8 +66,8 @@ export const FileProcessor = multer({
   fileFilter: (req, file, cb) => {
     if (
       !RequestFile.validJoin(
-        req.query.projectName as string,
-        req.query.projectScope as string
+        req.query.projectName as string
+        //req.query.projectScope as string
       )
     ) {
       return cb(new Error("Invalid project name or scope"));
