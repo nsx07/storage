@@ -152,7 +152,7 @@ export class BackupService {
                 });
             }
 
-            const command = `pg_restore -F t --no-privileges --no-owner -C -c --if-exists --dbname=${payload.connectionString} ${path}`
+            const command = `pg_restore -F t --no-privileges --no-owner -c --if-exists --dbname=${payload.connectionString} ${path}`
             exec(command, (error, stdout, stderr) => {
                 this.saveLog("restore " + (error ? "❌" : "✔"), stdout, stderr, command);
                 if (error) {
