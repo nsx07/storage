@@ -18,7 +18,7 @@ export class RedisCacheProvider implements CacheProvider {
     });
 
     this.client.on('error', (err) => console.error('Redis Client Error', err));
-    await this.client.connect();
+    this.client.connect();
   }
 
   async disconnect(): Promise<void> {

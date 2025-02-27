@@ -12,8 +12,12 @@ import {
   UploadedFile,
   BadRequestException,
   NotFoundException,
+  UploadedFiles,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import {
+  FileFieldsInterceptor,
+  FileInterceptor,
+} from '@nestjs/platform-express';
 import { StorageService } from '../../storage/services/storage.service';
 import { AuthGuard } from '../../../core/guards/auth.guard';
 import {
@@ -66,20 +70,20 @@ export class StorageController {
   })
   @ApiResponse({ status: 201, description: 'File uploaded successfully' })
   @ApiResponse({ status: 400, description: 'No file uploaded' })
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileFieldsInterceptor([{ name: 'file' }]))
   async uploadFile(
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFiles() { file }: { file: Express.Multer.File[] },
     @Query() query: FileOperationDto,
   ) {
-    if (!file) {
+    if (!file || !file.length) {
       throw new BadRequestException('No file uploaded');
     }
-    return {
-      fileName: file.filename,
+    return file.map((f) => ({
+      fileName: f.filename,
       projectName: query.projectName,
       projectScope: query.projectScope,
-      filePath: file.path,
-    };
+      filePath: f.path,
+    }));
   }
 
   @Post('update')

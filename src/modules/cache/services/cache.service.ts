@@ -15,9 +15,7 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
   async onModuleInit() {
     const cacheType = this.configService.get('CACHE_TYPE') || 'redis';
     this.provider = this.cacheFactory.createProvider(cacheType);
-    await this.provider.connect({
-      url: this.configService.get('REDIS_URL'),
-    });
+    await this.provider.connect();
   }
 
   async onModuleDestroy() {
