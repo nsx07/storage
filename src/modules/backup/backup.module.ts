@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, OnModuleInit } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 import { BackupController } from './controllers/backup.controller';
 import { BackupService } from './services/backup.service';
@@ -11,4 +11,10 @@ import { CacheModule } from '../cache/cache.module';
   providers: [BackupService],
   exports: [BackupService],
 })
-export class BackupModule {}
+export class BackupModule implements OnModuleInit {
+  constructor(private readonly backupService: BackupService) {}
+
+  onModuleInit() {
+    this.backupService.init();
+  }
+}

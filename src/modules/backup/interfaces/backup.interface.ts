@@ -4,7 +4,7 @@ export interface BackupOptions {
   connectionString: string;
   zip?: boolean;
   continuos?: boolean;
-  schedule?: string;
+  cron?: string;
   command?: string;
   path?: string;
   key?: string;

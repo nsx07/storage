@@ -115,11 +115,11 @@ export class BackupService {
 
   async scheduleBackup(payload: BackupOptions): Promise<{ error?: Error }> {
     try {
-      if (!payload.schedule) {
+      if (!payload.cron) {
         throw new Error('Schedule is required for continuous backup');
       }
 
-      const job = new CronJob(payload.schedule, async () => {
+      const job = new CronJob(payload.cron, async () => {
         try {
           await execAsync(payload.command!);
           await this.saveLog('scheduled backup ✔', '', '', payload.command!);
@@ -174,10 +174,20 @@ export class BackupService {
         status: cronJob ? 'active' : 'inactive',
         lastRun: cronJob?.lastDate(),
         nextRun: cronJob?.nextDate(),
+        ...backup,
       });
     }
 
     return backups;
+  }
+
+  async init(): Promise<void> {
+    const backups = await this.cacheService.keys('backup:*');
+
+    for (const backup of backups) {
+      const job = JSON.parse(await this.cacheService.get(backup, false));
+      await this.scheduleBackup(job);
+    }
   }
 
   private async saveLog(
