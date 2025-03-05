@@ -46,7 +46,7 @@ export class BackupController {
     return await this.backupService.backup(createBackupDto);
   }
 
-  @Put('updateBackup')
+  @Post('updateBackup')
   @ApiOperation({
     summary: 'Update existing backup',
     description: 'Updates configuration of an existing backup job',

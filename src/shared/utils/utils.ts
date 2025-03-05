@@ -195,3 +195,12 @@ export async function preparePath(projectName: string, projectScope: string) {
     }
   });
 }
+
+export function getPathOSBinary(command: string) {
+  const osCommand = process.platform === 'win32' ? `${command}.exe` : command;
+  const pathCommand = `${process.cwd()}/binaries${
+    process.platform === 'win32' ? '/windows/bin/' : '/linux_macos/bin/'
+  }`;
+
+  return `${pathCommand}${osCommand}`;
+}

@@ -11,6 +11,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import * as path from 'path';
 import { CronJob } from 'cron';
+import { getPathOSBinary } from 'src/shared/utils/utils';
 
 const execAsync = promisify(exec);
 
@@ -36,11 +37,12 @@ export class BackupService {
         throw new Error('name, folder and connectionString are required');
       }
 
-      payload.name = payload.name.substring(payload.name.lastIndexOf('.'));
+      payload.name = payload.name.substring(payload.name.lastIndexOf('.')); // must not contain file extension
       const backupPath = `${this.wwwroot}/backup/${payload.folder}/${payload.name}`;
 
+      const declared = this.schedulerRegistry.getCronJobs().has(payload.name);
       // Verifica se já existe um job agendado
-      if (this.schedulerRegistry.getCronJobs().has(payload.name) && !update) {
+      if (declared && !update) {
         this.logger.log(`${payload.name} already exists, executing now`);
         this.schedulerRegistry.getCronJobs().get(payload.name)?.fireOnTick();
 
@@ -51,10 +53,17 @@ export class BackupService {
         };
       }
 
+      if (declared && update) {
+        this.logger.log(
+          `${payload.name} already exists, updating configuration`,
+        );
+        await this.removeBackup(payload.name);
+      }
+
       // Cria diretórios necessários
       await this.storageService.createDirectory(`backup/${payload.folder}`);
 
-      const command = `pg_dump ${payload.zip ? '-F t' : ''} --dbname=${payload.connectionString} >> ${backupPath}`;
+      const command = `${getPathOSBinary('pg_dump')} ${payload.zip ? '-F t' : ''} --dbname=${payload.connectionString} >> ${backupPath}`;
 
       if (payload.continuos) {
         payload.path = backupPath;
@@ -93,7 +102,7 @@ export class BackupService {
         throw new Error('Backup file not found');
       }
 
-      const command = `pg_restore -F t --no-privileges --no-owner --dbname=${payload.connectionString} ${backupPath}`;
+      const command = `${getPathOSBinary('pg_restore')} -F t --no-privileges --no-owner --dbname=${payload.connectionString} ${backupPath}`;
       const { stdout, stderr } = await execAsync(command);
 
       await this.saveLog('restore ✔', stdout, stderr, command);
@@ -142,8 +151,8 @@ export class BackupService {
 
   async removeBackup(name: string): Promise<BackupResponse> {
     try {
-      const jobKey = `job:${name}`;
-      const taskKey = `backup:${name}`;
+      const jobKey = name.split(':').pop();
+      const taskKey = `backup:${jobKey}`;
 
       this.schedulerRegistry.deleteCronJob(jobKey);
       await this.cacheService.del(taskKey);
@@ -153,6 +162,8 @@ export class BackupService {
         status: 'success',
       };
     } catch (error) {
+      console.log(error);
+
       return {
         message: 'backup job not found',
         status: 'failed',
