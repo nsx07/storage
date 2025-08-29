@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { StorageController } from './controllers/storage.controller';
 import { StorageService } from './services/storage.service';
+import { FileServerService } from './services/file-server.service';
 import { MulterModule } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { preparePath, wwwroot } from '../../shared/utils/utils';
@@ -78,7 +79,7 @@ const storage = diskStorage({
     }),
   ],
   controllers: [StorageController],
-  providers: [StorageService],
-  exports: [StorageService],
+  providers: [StorageService, FileServerService],
+  exports: [StorageService, FileServerService],
 })
 export class StorageModule {}

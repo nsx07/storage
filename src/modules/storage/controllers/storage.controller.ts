@@ -13,11 +13,15 @@ import {
   BadRequestException,
   NotFoundException,
   UploadedFiles,
+  Param,
+  Res,
+  StreamableFile,
 } from '@nestjs/common';
 import {
   FileFieldsInterceptor,
   FileInterceptor,
 } from '@nestjs/platform-express';
+import { Response } from 'express';
 import { StorageService } from '../../storage/services/storage.service';
 import { AuthGuard } from '../../../core/guards/auth.guard';
 import {
@@ -35,15 +39,20 @@ import {
   ApiConsumes,
   ApiQuery,
   ApiSecurity,
+  ApiParam,
 } from '@nestjs/swagger';
 import { buildPath, wwwroot } from '../../../shared/utils/utils';
+import { FileServerService } from '../services/file-server.service';
 
 @ApiTags('Storage')
 @Controller('api/')
 @ApiSecurity('StorageApiKey')
 @UseGuards(AuthGuard)
 export class StorageController {
-  constructor(private readonly storageService: StorageService) {}
+  constructor(
+    private readonly storageService: StorageService,
+    private readonly fileServerService: FileServerService,
+  ) {}
 
   @Post('save')
   @ApiOperation({
@@ -243,6 +252,39 @@ export class StorageController {
       throw new BadRequestException(result.error?.message);
     }
     return result;
+  }
+
+  @Get('stream/:filePath(*)')
+  @ApiOperation({
+    summary: 'Stream file with Range support',
+    description: 'Stream files with support for partial content (HTTP Range requests)',
+  })
+  @ApiParam({
+    name: 'filePath',
+    description: 'Path to the file relative to wwwroot',
+    example: 'uploads/image.jpg',
+  })
+  @ApiResponse({ 
+    status: 206, 
+    description: 'Partial content returned (for range requests)' 
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Complete file returned' 
+  })
+  @ApiResponse({ 
+    status: 404, 
+    description: 'File not found' 
+  })
+  async streamFile(
+    @Param('filePath') filePath: string,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<StreamableFile> {
+    try {
+      return await this.fileServerService.serveFile(filePath, res);
+    } catch (error) {
+      throw new NotFoundException('File not found');
+    }
   }
 
   @Get('listTree')
