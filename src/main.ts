@@ -12,6 +12,9 @@ import { PerformanceMiddleware } from './common/middleware/performance.middlewar
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const logger = new Logger('Bootstrap');
+  
+  // Configure Express to trust Railway proxy
+  app.getHttpAdapter().getInstance().set('trust proxy', true);
 
   // Performance monitoring middleware
   app.use(new PerformanceMiddleware().use.bind(new PerformanceMiddleware()));
@@ -24,7 +27,7 @@ async function bootstrap() {
     }),
   );
 
-  // Rate limiting for API endpoints
+  // Rate limiting for API endpoints - Railway compatible
   app.use(
     '/api/',
     rateLimit({
@@ -33,10 +36,12 @@ async function bootstrap() {
       message: 'Too many requests from this IP',
       standardHeaders: true,
       legacyHeaders: false,
+      skipSuccessfulRequests: false,
+      skipFailedRequests: false,
     }),
   );
 
-  // More generous rate limiting for static files
+  // More generous rate limiting for static files - Railway compatible
   app.use(
     '/wwwroot/',
     rateLimit({
