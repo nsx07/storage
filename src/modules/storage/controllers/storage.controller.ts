@@ -33,14 +33,14 @@ import {
   ApiResponse,
   ApiBody,
   ApiConsumes,
-  ApiBearerAuth,
   ApiQuery,
+  ApiSecurity,
 } from '@nestjs/swagger';
 import { buildPath, wwwroot } from 'src/shared/utils/utils';
 
 @ApiTags('Storage')
-@ApiBearerAuth()
 @Controller('api/')
+@ApiSecurity('StorageApiKey')
 @UseGuards(AuthGuard)
 export class StorageController {
   constructor(private readonly storageService: StorageService) {}

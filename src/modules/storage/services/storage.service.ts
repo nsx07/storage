@@ -87,8 +87,15 @@ export class StorageService {
 
   async log(logPath: string, content: string): Promise<ResponseFile> {
     try {
-      const fullPath = path.join(this.wwwroot, 'logs', logPath);
-      await this.createDirectory(path.dirname(fullPath));
+      const basePath = path.join(this.wwwroot, 'logs');
+      const fullPath = path.join(basePath, logPath);
+      const lastSlashIndex = fullPath.lastIndexOf(path.sep);
+      const dirPath = fullPath.slice(0, lastSlashIndex);
+
+      if (!(await this.fileExists(dirPath))) {
+        await fs.mkdir(dirPath, { recursive: true });
+      }
+
       await fs.appendFile(fullPath, content + '\n');
       return ResponseFile.fromPath(fullPath).SUCCESS;
     } catch (error) {

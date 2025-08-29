@@ -26,6 +26,6 @@ export class AppService {
       };
     }
 
-    return { success: true, code: 'Unauthorized', message: 'Token validated' };
+    return { success: true, code: 'Authorized', message: 'Token validated' };
   }
 }

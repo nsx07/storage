@@ -218,7 +218,7 @@ export class BackupService {
     `;
 
     await this.storageService.log(
-      `backup/logs/${date.split('T')[0]}_log`,
+      `backup/${date.split('T')[0]}_log`,
       logContent,
     );
   }

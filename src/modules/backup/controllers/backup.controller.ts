@@ -2,7 +2,6 @@ import {
   Controller,
   Get,
   Post,
-  Put,
   Delete,
   Body,
   Query,
@@ -17,13 +16,13 @@ import {
   ApiResponse,
   ApiBody,
   ApiQuery,
-  ApiBearerAuth,
+  ApiSecurity,
 } from '@nestjs/swagger';
 
 @ApiTags('Backup')
-@ApiBearerAuth()
 @Controller('api')
 @UseGuards(AuthGuard)
+@ApiSecurity('StorageApiKey')
 export class BackupController {
   constructor(private readonly backupService: BackupService) {}
 
