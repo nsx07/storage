@@ -2,11 +2,11 @@ import dns from 'dns';
 import * as path from 'path';
 import { promises as fs } from 'fs';
 import * as process from 'process';
-import { FileOperationDto } from 'src/modules/storage/dto/file.dto';
+import { FileOperationDto } from '../../modules/storage/dto/file.dto';
 import {
   FileStatus,
   ResponseFile,
-} from 'src/modules/storage/interfaces/file.interface';
+} from '../../modules/storage/interfaces/file.interface';
 
 export const wwwroot = path.join(process.cwd(), 'wwwroot');
 

@@ -5,5 +5,19 @@
   "testRegex": ".e2e-spec.ts$",
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
-  }
+  },
+  "setupFilesAfterEnv": ["<rootDir>/jest.setup.ts"],
+  "moduleNameMapper": {
+    "^src/(.*)$": "<rootDir>/../src/$1"
+  },
+  "collectCoverageFrom": [
+    "../src/**/*.ts",
+    "!../src/**/*.interface.ts",
+    "!../src/**/*.dto.ts",
+    "!../src/**/*.module.ts",
+    "!../src/main.ts"
+  ],
+  "coverageDirectory": "../coverage-e2e",
+  "testTimeout": 30000,
+  "maxWorkers": 1
 }

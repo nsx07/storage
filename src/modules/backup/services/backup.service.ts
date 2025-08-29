@@ -11,7 +11,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import * as path from 'path';
 import { CronJob } from 'cron';
-import { getPathOSBinary } from 'src/shared/utils/utils';
+import { getPathOSBinary } from '../../../shared/utils/utils';
 
 const execAsync = promisify(exec);
 

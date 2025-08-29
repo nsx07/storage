@@ -3,7 +3,7 @@ import { promises as fs, readdirSync, statSync } from 'fs';
 import * as path from 'path';
 import { FileStatus, ResponseFile } from '../interfaces/file.interface';
 import * as AdmZip from 'adm-zip';
-import { parsePlatformPath, stripPath } from 'src/shared/utils/utils';
+import { parsePlatformPath, stripPath } from '../../../shared/utils/utils';
 import { FileView } from '../dto/file.dto';
 
 @Injectable()

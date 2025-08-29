@@ -1,4 +1,4 @@
-import { preparePath, wwwroot } from 'src/shared/utils/utils';
+import { preparePath, wwwroot } from './utils';
 import * as path from 'path';
 import { promises as fs } from 'fs';
 import { diskStorage } from 'multer';

@@ -3,7 +3,7 @@ import { StorageController } from './controllers/storage.controller';
 import { StorageService } from './services/storage.service';
 import { MulterModule } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-import { preparePath, wwwroot } from 'src/shared/utils/utils';
+import { preparePath, wwwroot } from '../../shared/utils/utils';
 import * as path from 'path';
 import { promises as fs } from 'fs';
 

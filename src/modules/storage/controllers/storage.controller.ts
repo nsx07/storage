@@ -36,7 +36,7 @@ import {
   ApiQuery,
   ApiSecurity,
 } from '@nestjs/swagger';
-import { buildPath, wwwroot } from 'src/shared/utils/utils';
+import { buildPath, wwwroot } from '../../../shared/utils/utils';
 
 @ApiTags('Storage')
 @Controller('api/')
