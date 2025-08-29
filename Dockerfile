@@ -34,6 +34,10 @@ COPY --from=development /app/binaries ./binaries
 COPY --from=pruned /app/package.json /app/package-lock.json ./
 COPY --from=pruned /app/node_modules ./node_modules
 
+# Create wwwroot directory with proper permissions
+RUN chown -R node:node /app/wwwroot && \
+    chmod 755 /app/wwwroot
+
 # Use non-root user for security
 USER node
 

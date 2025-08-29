@@ -129,33 +129,62 @@ export class StorageService {
     }
   }
 
-  listFromPath(_path: string): FileView {
-    const stat = statSync(_path);
+  listFromPath(_path: string): FileView | null {
+    try {
+      const stat = statSync(_path);
 
-    if (stat.isDirectory()) {
-      const files = readdirSync(_path);
+      if (stat.isDirectory()) {
+        // Skip system directories that may have restricted permissions
+        const fileName = path.basename(_path);
+        const systemDirectories = ['lost+found', '.Trash-1000', '.cache'];
+        
+        if (systemDirectories.includes(fileName)) {
+          return null;
+        }
 
-      const tree = files.map((file) => {
-        const newPath = path.join(_path, file);
-        return this.listFromPath(newPath);
-      });
+        let files: string[] = [];
+        try {
+          files = readdirSync(_path);
+        } catch (error) {
+          // Skip directories we don't have permission to read
+          console.warn(`Skipping directory due to permission error: ${_path}`, error.message);
+          return null;
+        }
 
-      return {
-        type: 'folder',
-        name: path.basename(_path),
-        path: stripPath(_path),
-        size: stat.size,
-        datetime: stat.mtime,
-        content: tree,
-      };
-    } else {
-      return {
-        type: 'file',
-        path: stripPath(_path),
-        name: path.basename(_path),
-        datetime: stat.mtime,
-        size: stat.size,
-      };
+        const tree = files
+          .map((file) => {
+            const newPath = path.join(_path, file);
+            try {
+              return this.listFromPath(newPath);
+            } catch (error) {
+              // Skip files/directories that can't be accessed
+              console.warn(`Skipping file/directory due to error: ${newPath}`, error.message);
+              return null;
+            }
+          })
+          .filter((item) => item !== null);
+
+        return {
+          type: 'folder',
+          name: path.basename(_path),
+          path: stripPath(_path),
+          size: stat.size,
+          datetime: stat.mtime,
+          content: tree,
+        };
+      } else {
+        return {
+          type: 'file',
+          path: stripPath(_path),
+          name: path.basename(_path),
+          datetime: stat.mtime,
+          size: stat.size,
+        };
+      }
+    } catch (error) {
+      // Skip files/directories that can't be accessed
+      console.warn(`Skipping path due to error: ${_path}`, error.message);
+      return null;
     }
   }
 }

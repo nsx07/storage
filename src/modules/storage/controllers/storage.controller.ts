@@ -298,6 +298,7 @@ export class StorageController {
     description: 'Directory tree retrieved successfully',
   })
   async listTree() {
-    return [this.storageService.listFromPath(wwwroot)];
+    const result = this.storageService.listFromPath(wwwroot);
+    return result ? [result] : [];
   }
 }
