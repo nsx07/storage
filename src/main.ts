@@ -12,46 +12,58 @@ import { PerformanceMiddleware } from './common/middleware/performance.middlewar
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const logger = new Logger('Bootstrap');
-  
+
   // Performance monitoring middleware
   app.use(new PerformanceMiddleware().use.bind(new PerformanceMiddleware()));
-  
+
   // Security middleware
-  app.use(helmet({
-    crossOriginResourcePolicy: { policy: 'cross-origin' }, // Allow cross-origin requests for static files
-    contentSecurityPolicy: false, // Disable CSP for API
-  }));
-  
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: { policy: 'cross-origin' }, // Allow cross-origin requests for static files
+      contentSecurityPolicy: false, // Disable CSP for API
+    }),
+  );
+
   // Rate limiting for API endpoints
-  app.use('/api/', rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 1000, // Limit each IP to 1000 requests per windowMs
-    message: 'Too many requests from this IP',
-    standardHeaders: true,
-    legacyHeaders: false,
-  }));
-  
+  app.use(
+    '/api/',
+    rateLimit({
+      windowMs: 15 * 60 * 1000, // 15 minutes
+      max: 1000, // Limit each IP to 1000 requests per windowMs
+      message: 'Too many requests from this IP',
+      standardHeaders: true,
+      legacyHeaders: false,
+    }),
+  );
+
   // More generous rate limiting for static files
-  app.use('/wwwroot/', rateLimit({
-    windowMs: 1 * 60 * 1000, // 1 minute
-    max: 500, // 500 static file requests per minute
-    skip: (req) => {
-      // Skip rate limiting for cached files
-      return !!(req.headers['if-none-match'] || req.headers['if-modified-since']);
-    }
-  }));
+  app.use(
+    '/wwwroot/',
+    rateLimit({
+      windowMs: 1 * 60 * 1000, // 1 minute
+      max: 500, // 500 static file requests per minute
+      skip: (req) => {
+        // Skip rate limiting for cached files
+        return !!(
+          req.headers['if-none-match'] || req.headers['if-modified-since']
+        );
+      },
+    }),
+  );
 
   // Enhanced compression with better configuration
-  app.use(compression({
-    level: 6, // Optimal balance between speed and compression
-    threshold: 1024, // Only compress files larger than 1KB
-    filter: (req, res) => {
-      // Don't compress already compressed files
-      if (req.headers['x-no-compression']) return false;
-      return compression.filter(req, res);
-    }
-  }));
-  
+  app.use(
+    compression({
+      level: 6, // Optimal balance between speed and compression
+      threshold: 1024, // Only compress files larger than 1KB
+      filter: (req, res) => {
+        // Don't compress already compressed files
+        if (req.headers['x-no-compression']) return false;
+        return compression.filter(req, res);
+      },
+    }),
+  );
+
   app.use(
     cors({
       origin: '*',
@@ -62,29 +74,32 @@ async function bootstrap() {
   );
 
   // Enhanced static file serving with caching and optimizations
-  app.use('/wwwroot', express.static('wwwroot', {
-    maxAge: '1d', // Cache static files for 1 day
-    etag: true, // Enable ETag headers
-    lastModified: true, // Enable Last-Modified headers
-    immutable: false, // Files can change
-    setHeaders: (res, path) => {
-      // Set cache headers based on file type
-      if (path.match(/\.(jpg|jpeg|png|gif|ico|svg|webp)$/i)) {
-        res.setHeader('Cache-Control', 'public, max-age=2592000'); // 30 days for images
-      } else if (path.match(/\.(css|js)$/i)) {
-        res.setHeader('Cache-Control', 'public, max-age=604800'); // 7 days for CSS/JS
-      } else if (path.match(/\.(zip|tar|gz|rar)$/i)) {
-        res.setHeader('Cache-Control', 'public, max-age=86400'); // 1 day for archives
-      } else {
-        res.setHeader('Cache-Control', 'public, max-age=3600'); // 1 hour for other files
-      }
-      
-      // Add security headers
-      res.setHeader('X-Content-Type-Options', 'nosniff');
-      res.setHeader('X-Frame-Options', 'DENY');
-    }
-  }));
-  
+  app.use(
+    '/wwwroot',
+    express.static('wwwroot', {
+      maxAge: '1d', // Cache static files for 1 day
+      etag: true, // Enable ETag headers
+      lastModified: true, // Enable Last-Modified headers
+      immutable: false, // Files can change
+      setHeaders: (res, path) => {
+        // Set cache headers based on file type
+        if (path.match(/\.(jpg|jpeg|png|gif|ico|svg|webp)$/i)) {
+          res.setHeader('Cache-Control', 'public, max-age=2592000'); // 30 days for images
+        } else if (path.match(/\.(css|js)$/i)) {
+          res.setHeader('Cache-Control', 'public, max-age=604800'); // 7 days for CSS/JS
+        } else if (path.match(/\.(zip|tar|gz|rar)$/i)) {
+          res.setHeader('Cache-Control', 'public, max-age=86400'); // 1 day for archives
+        } else {
+          res.setHeader('Cache-Control', 'public, max-age=3600'); // 1 hour for other files
+        }
+
+        // Add security headers
+        res.setHeader('X-Content-Type-Options', 'nosniff');
+        res.setHeader('X-Frame-Options', 'DENY');
+      },
+    }),
+  );
+
   app.useGlobalPipes(new ValidationPipe());
 
   const config = new DocumentBuilder()
@@ -108,7 +123,9 @@ async function bootstrap() {
   const port = process.env.PORT || 3030;
   await app.listen(port);
   logger.log(`🚀 Application is running on: http://localhost:${port}`);
-  logger.log(`📖 Swagger documentation available at: http://localhost:${port}/swagger`);
+  logger.log(
+    `📖 Swagger documentation available at: http://localhost:${port}/swagger`,
+  );
   logger.log(`📁 Static files available at: http://localhost:${port}/wwwroot`);
 }
 bootstrap();

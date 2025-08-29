@@ -257,24 +257,25 @@ export class StorageController {
   @Get('stream/:filePath(*)')
   @ApiOperation({
     summary: 'Stream file with Range support',
-    description: 'Stream files with support for partial content (HTTP Range requests)',
+    description:
+      'Stream files with support for partial content (HTTP Range requests)',
   })
   @ApiParam({
     name: 'filePath',
     description: 'Path to the file relative to wwwroot',
     example: 'uploads/image.jpg',
   })
-  @ApiResponse({ 
-    status: 206, 
-    description: 'Partial content returned (for range requests)' 
+  @ApiResponse({
+    status: 206,
+    description: 'Partial content returned (for range requests)',
   })
-  @ApiResponse({ 
-    status: 200, 
-    description: 'Complete file returned' 
+  @ApiResponse({
+    status: 200,
+    description: 'Complete file returned',
   })
-  @ApiResponse({ 
-    status: 404, 
-    description: 'File not found' 
+  @ApiResponse({
+    status: 404,
+    description: 'File not found',
   })
   async streamFile(
     @Param('filePath') filePath: string,

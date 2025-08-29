@@ -22,7 +22,10 @@ export class PerformanceMiddleware implements NestMiddleware {
       const contentLength = res.get('Content-Length');
 
       // Log performance metrics for static files
-      if (originalUrl.startsWith('/wwwroot') || originalUrl.startsWith('/api/stream')) {
+      if (
+        originalUrl.startsWith('/wwwroot') ||
+        originalUrl.startsWith('/api/stream')
+      ) {
         this.logFileServing({
           requestId,
           method,
@@ -37,7 +40,9 @@ export class PerformanceMiddleware implements NestMiddleware {
 
       // Log slow requests (> 1 second)
       if (duration > 1000) {
-        this.logger.warn(`Slow request detected: ${method} ${originalUrl} - ${duration}ms`);
+        this.logger.warn(
+          `Slow request detected: ${method} ${originalUrl} - ${duration}ms`,
+        );
       }
     });
 
@@ -54,20 +59,32 @@ export class PerformanceMiddleware implements NestMiddleware {
     userAgent: string;
     cached: boolean;
   }): void {
-    const { requestId, method, url, statusCode, duration, contentLength, cached } = data;
-    
-    const size = contentLength ? `${Math.round(parseInt(contentLength) / 1024)}KB` : 'unknown';
+    const {
+      requestId,
+      method,
+      url,
+      statusCode,
+      duration,
+      contentLength,
+      cached,
+    } = data;
+
+    const size = contentLength
+      ? `${Math.round(parseInt(contentLength) / 1024)}KB`
+      : 'unknown';
     const cacheStatus = cached ? 'HIT' : 'MISS';
-    
+
     this.logger.log(
-      `[${requestId}] ${method} ${url} - ${statusCode} - ${duration}ms - ${size} - Cache: ${cacheStatus}`
+      `[${requestId}] ${method} ${url} - ${statusCode} - ${duration}ms - ${size} - Cache: ${cacheStatus}`,
     );
   }
 
   private isCachedResponse(req: Request, res: Response): boolean {
     // Check if response was served from cache
-    return res.statusCode === 304 || 
-           !!(req.headers['if-none-match'] && res.get('ETag')) ||
-           !!(req.headers['if-modified-since'] && res.get('Last-Modified'));
+    return (
+      res.statusCode === 304 ||
+      !!(req.headers['if-none-match'] && res.get('ETag')) ||
+      !!(req.headers['if-modified-since'] && res.get('Last-Modified'))
+    );
   }
 }

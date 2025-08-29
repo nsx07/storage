@@ -13,7 +13,7 @@ export class FileServerService {
    */
   async serveFile(filePath: string, res: Response): Promise<StreamableFile> {
     const fullPath = join(this.wwwroot, filePath);
-    
+
     if (!existsSync(fullPath)) {
       throw new Error('File not found');
     }
@@ -36,7 +36,7 @@ export class FileServerService {
       const parts = range.replace(/bytes=/, '').split('-');
       const start = parseInt(parts[0], 10);
       const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
-      const chunkSize = (end - start) + 1;
+      const chunkSize = end - start + 1;
 
       res.status(206);
       res.setHeader('Content-Range', `bytes ${start}-${end}/${fileSize}`);
@@ -48,7 +48,7 @@ export class FileServerService {
     } else {
       res.setHeader('Content-Length', fileSize.toString());
       res.setHeader('Accept-Ranges', 'bytes');
-      
+
       const stream = createReadStream(fullPath);
       return new StreamableFile(stream);
     }
@@ -59,7 +59,7 @@ export class FileServerService {
    */
   private getCacheControl(filePath: string): string {
     const ext = filePath.split('.').pop()?.toLowerCase();
-    
+
     switch (ext) {
       case 'jpg':
       case 'jpeg':
@@ -69,22 +69,22 @@ export class FileServerService {
       case 'svg':
       case 'webp':
         return 'public, max-age=2592000, immutable'; // 30 days for images
-      
+
       case 'css':
       case 'js':
         return 'public, max-age=604800'; // 7 days for CSS/JS
-      
+
       case 'zip':
       case 'tar':
       case 'gz':
       case 'rar':
         return 'public, max-age=86400'; // 1 day for archives
-      
+
       case 'pdf':
       case 'doc':
       case 'docx':
         return 'public, max-age=3600'; // 1 hour for documents
-      
+
       default:
         return 'public, max-age=300'; // 5 minutes for other files
     }
