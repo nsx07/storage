@@ -43,12 +43,13 @@ ENV PORT=3000
 
 # Performance optimizations
 ENV UV_THREADPOOL_SIZE=128
-ENV NODE_OPTIONS="--max-old-space-size=4096 --optimize-for-size"
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 
 EXPOSE 3000
 
 # Add healthcheck for better orchestration
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:3000/api || exit 1
+
 
 CMD ["node", "dist/main.js"]
