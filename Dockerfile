@@ -34,13 +34,6 @@ COPY --from=development /app/binaries ./binaries
 COPY --from=pruned /app/package.json /app/package-lock.json ./
 COPY --from=pruned /app/node_modules ./node_modules
 
-# Create wwwroot directory with proper permissions
-RUN chown -R node:node /app/wwwroot && \
-    chmod 755 /app/wwwroot
-
-# Use non-root user for security
-USER node
-
 # Set production environment
 ENV NODE_ENV=production
 ENV PORT=3000
@@ -56,4 +49,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:3000/api || exit 1
 
 
-CMD ["node", "dist/main.js"]
+CMD ["sh","-c","npm run start:prod"]
