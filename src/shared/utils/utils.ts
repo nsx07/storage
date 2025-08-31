@@ -197,6 +197,12 @@ export async function preparePath(projectName: string, projectScope: string) {
 }
 
 export function getPathOSBinary(command: string) {
+  // In production (Linux/Alpine), use system-installed PostgreSQL tools
+  if (process.platform === 'linux' && process.env.NODE_ENV === 'production') {
+    return command; // Use system PATH
+  }
+
+  // For development (Windows) or other environments, use bundled binaries
   const osCommand = process.platform === 'win32' ? `${command}.exe` : command;
   const pathCommand = `${process.cwd()}/binaries${
     process.platform === 'win32' ? '/windows/bin/' : '/linux/bin/'

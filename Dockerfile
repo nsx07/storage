@@ -1,11 +1,15 @@
 FROM node:20-alpine AS base
 EXPOSE 3000
 
-# Install performance optimizations
+# Install performance optimizations and PostgreSQL 16 client tools
 RUN apk add --no-cache \
     curl \
     libc6-compat \
-    && rm -rf /var/cache/apk/*
+    postgresql16-client \
+    && rm -rf /var/cache/apk/* \
+    && pg_dump --version \
+    && pg_restore --version \
+    && echo "PostgreSQL 16 client tools installed successfully"
 
 FROM base AS pruned
 WORKDIR /app
@@ -18,7 +22,6 @@ EXPOSE 3000
 FROM base AS development
 WORKDIR /app
 COPY ./src ./src
-COPY ./binaries ./binaries
 COPY package.json package-lock.json tsconfig.build.json tsconfig.json .eslintrc.js .prettierrc ./
 RUN npm ci --no-audit --no-fund
 RUN npm run build
@@ -30,14 +33,9 @@ WORKDIR /app
 
 # Copy built application
 COPY --from=development /app/dist ./dist
-COPY --from=development /app/binaries ./binaries
 COPY --from=pruned /app/package.json /app/package-lock.json ./
 COPY --from=pruned /app/node_modules ./node_modules
 
-# Set execute permissions for Linux binaries
-RUN chmod +x ./binaries/linux/bin/* && \
-    ls -la ./binaries/linux/bin/ && \
-    echo "Binary permissions set successfully"
 
 # Set production environment
 ENV NODE_ENV=production
