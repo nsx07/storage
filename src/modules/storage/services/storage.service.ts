@@ -134,10 +134,9 @@ export class StorageService {
       const stat = statSync(_path);
 
       if (stat.isDirectory()) {
-        // Skip system directories that may have restricted permissions
         const fileName = path.basename(_path);
         const systemDirectories = ['lost+found', '.Trash-1000', '.cache'];
-        
+
         if (systemDirectories.includes(fileName)) {
           return null;
         }
@@ -146,8 +145,10 @@ export class StorageService {
         try {
           files = readdirSync(_path);
         } catch (error) {
-          // Skip directories we don't have permission to read
-          console.warn(`Skipping directory due to permission error: ${_path}`, error.message);
+          console.warn(
+            `Skipping directory due to permission error: ${_path}`,
+            error.message,
+          );
           return null;
         }
 
@@ -157,8 +158,10 @@ export class StorageService {
             try {
               return this.listFromPath(newPath);
             } catch (error) {
-              // Skip files/directories that can't be accessed
-              console.warn(`Skipping file/directory due to error: ${newPath}`, error.message);
+              console.warn(
+                `Skipping file/directory due to error: ${newPath}`,
+                error.message,
+              );
               return null;
             }
           })

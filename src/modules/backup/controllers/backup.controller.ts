@@ -117,4 +117,18 @@ export class BackupController {
   async listJobs() {
     return await this.backupService.listBackups();
   }
+
+  @Get('debug/binaries')
+  @ApiOperation({
+    summary: 'Debug binary permissions',
+    description:
+      'Checks the status and permissions of required binaries (pg_dump, pg_restore)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Binary status retrieved successfully',
+  })
+  async checkBinaryStatus() {
+    return await this.backupService.checkBinaryStatus();
+  }
 }
