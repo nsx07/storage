@@ -32,6 +32,21 @@ export class BackupService {
   private async verifyBinaryPermissions(binaryName: string): Promise<void> {
     const binaryPath = getPathOSBinary(binaryName);
 
+    // If using system binary (just the command name), check if it's available in PATH
+    if (binaryPath === binaryName) {
+      try {
+        // Test if the binary is available in PATH
+        await execAsync(`which ${binaryName}`);
+        this.logger.log(`System binary ${binaryName} is available in PATH`);
+        return;
+      } catch (error) {
+        const errorMsg = `System binary ${binaryName} is not available in PATH: ${error.message}`;
+        this.logger.error(errorMsg);
+        throw new Error(errorMsg);
+      }
+    }
+
+    // For custom binaries, check file permissions as before
     try {
       await fs.access(binaryPath, constants.F_OK | constants.X_OK);
       this.logger.log(
@@ -266,37 +281,62 @@ export class BackupService {
     for (const binary of binaries) {
       const binaryPath = getPathOSBinary(binary);
 
-      try {
-        await fs.access(binaryPath, constants.F_OK);
-
+      // Check if using system binary (just the command name)
+      if (binaryPath === binary) {
         try {
-          await fs.access(binaryPath, constants.X_OK);
+          // Test if the binary is available in PATH
+          await execAsync(`which ${binary}`);
           results.push({
             binary,
-            path: binaryPath,
+            path: 'system PATH',
             exists: true,
             executable: true,
-            status: 'OK',
+            status: 'OK (System Binary)',
           });
-        } catch (execError) {
+        } catch (error) {
+          results.push({
+            binary,
+            path: 'system PATH',
+            exists: false,
+            executable: false,
+            status: 'NOT_FOUND_IN_PATH',
+            error: error.message,
+          });
+        }
+      } else {
+        // Check custom binary file
+        try {
+          await fs.access(binaryPath, constants.F_OK);
+
+          try {
+            await fs.access(binaryPath, constants.X_OK);
+            results.push({
+              binary,
+              path: binaryPath,
+              exists: true,
+              executable: true,
+              status: 'OK (Custom Binary)',
+            });
+          } catch (execError) {
+            results.push({
+              binary,
+              path: binaryPath,
+              exists: true,
+              executable: false,
+              status: 'NOT_EXECUTABLE',
+              error: execError.message,
+            });
+          }
+        } catch (error) {
           results.push({
             binary,
             path: binaryPath,
-            exists: true,
+            exists: false,
             executable: false,
-            status: 'NOT_EXECUTABLE',
-            error: execError.message,
+            status: 'NOT_FOUND',
+            error: error.message,
           });
         }
-      } catch (error) {
-        results.push({
-          binary,
-          path: binaryPath,
-          exists: false,
-          executable: false,
-          status: 'NOT_FOUND',
-          error: error.message,
-        });
       }
     }
 
