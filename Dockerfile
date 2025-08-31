@@ -34,6 +34,11 @@ COPY --from=development /app/binaries ./binaries
 COPY --from=pruned /app/package.json /app/package-lock.json ./
 COPY --from=pruned /app/node_modules ./node_modules
 
+# Set execute permissions for Linux binaries
+RUN chmod +x ./binaries/linux/bin/* && \
+    ls -la ./binaries/linux/bin/ && \
+    echo "Binary permissions set successfully"
+
 # Set production environment
 ENV NODE_ENV=production
 ENV PORT=3000

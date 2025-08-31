@@ -10,6 +10,7 @@ import {
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import * as path from 'path';
+import { promises as fs, constants } from 'fs';
 import { CronJob } from 'cron';
 import { getPathOSBinary } from '../../../shared/utils/utils';
 
@@ -28,6 +29,30 @@ export class BackupService {
     this.wwwroot = path.join(process.cwd(), 'wwwroot');
   }
 
+  private async verifyBinaryPermissions(binaryName: string): Promise<void> {
+    const binaryPath = getPathOSBinary(binaryName);
+
+    try {
+      await fs.access(binaryPath, constants.F_OK | constants.X_OK);
+      this.logger.log(
+        `Binary ${binaryName} is accessible and executable at ${binaryPath}`,
+      );
+    } catch (error) {
+      try {
+        await fs.chmod(binaryPath, '0755');
+        this.logger.log(
+          `Set execute permissions for binary ${binaryName} at ${binaryPath}`,
+        );
+
+        await fs.access(binaryPath, constants.F_OK | constants.X_OK);
+      } catch (permError) {
+        const errorMsg = `Binary ${binaryName} at ${binaryPath} is not accessible or executable: ${permError.message}`;
+        this.logger.error(errorMsg);
+        throw new Error(errorMsg);
+      }
+    }
+  }
+
   async backup(
     payload: BackupOptions,
     update = false,
@@ -37,11 +62,9 @@ export class BackupService {
         throw new Error('name, folder and connectionString are required');
       }
 
-      payload.name = payload.name.substring(payload.name.lastIndexOf('.')); // must not contain file extension
       const backupPath = `${this.wwwroot}/backup/${payload.folder}/${payload.name}`;
 
       const declared = this.schedulerRegistry.getCronJobs().has(payload.name);
-      // Verifica se já existe um job agendado
       if (declared && !update) {
         this.logger.log(`${payload.name} already exists, executing now`);
         this.schedulerRegistry.getCronJobs().get(payload.name)?.fireOnTick();
@@ -60,8 +83,10 @@ export class BackupService {
         await this.removeBackup(payload.name);
       }
 
-      // Cria diretórios necessários
-      await this.storageService.createDirectory(`backup/${payload.folder}`);
+      await Promise.allSettled([
+        this.storageService.createDirectory(`backup/${payload.folder}`),
+        this.verifyBinaryPermissions('pg_dump'),
+      ]);
 
       const command = `${getPathOSBinary('pg_dump')} ${payload.zip ? '-F t' : ''} --dbname=${payload.connectionString} >> ${backupPath}`;
 
@@ -101,6 +126,8 @@ export class BackupService {
       if (!(await this.storageService.fileExists(backupPath))) {
         throw new Error('Backup file not found');
       }
+
+      await this.verifyBinaryPermissions('pg_restore');
 
       const command = `${getPathOSBinary('pg_restore')} -F t --no-privileges --no-owner --dbname=${payload.connectionString} ${backupPath}`;
       const { stdout, stderr } = await execAsync(command);
@@ -209,12 +236,13 @@ export class BackupService {
   ): Promise<void> {
     const date = new Date().toISOString();
     const logContent = `
+      =============== LOG ENTRY ==============
       [${date}] ${message}
       [${date}] command: ${command}
       ===============OUTPUT START================
       [${date}] stdout: ${stdout}
       [${date}] stderr: ${stderr}
-      ===============OUTPUT END =================
+      =============== LOG END =================
     `;
 
     await this.storageService.log(
@@ -229,5 +257,54 @@ export class BackupService {
 
   parseTaskName(name: string): string {
     return `backup:${name}`;
+  }
+
+  async checkBinaryStatus(): Promise<any> {
+    const binaries = ['pg_dump', 'pg_restore', 'pg_dumpall'];
+    const results = [];
+
+    for (const binary of binaries) {
+      const binaryPath = getPathOSBinary(binary);
+
+      try {
+        await fs.access(binaryPath, constants.F_OK);
+
+        try {
+          await fs.access(binaryPath, constants.X_OK);
+          results.push({
+            binary,
+            path: binaryPath,
+            exists: true,
+            executable: true,
+            status: 'OK',
+          });
+        } catch (execError) {
+          results.push({
+            binary,
+            path: binaryPath,
+            exists: true,
+            executable: false,
+            status: 'NOT_EXECUTABLE',
+            error: execError.message,
+          });
+        }
+      } catch (error) {
+        results.push({
+          binary,
+          path: binaryPath,
+          exists: false,
+          executable: false,
+          status: 'NOT_FOUND',
+          error: error.message,
+        });
+      }
+    }
+
+    return {
+      platform: process.platform,
+      architecture: process.arch,
+      workingDirectory: process.cwd(),
+      binaries: results,
+    };
   }
 }
