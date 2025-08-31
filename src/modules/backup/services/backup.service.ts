@@ -13,6 +13,7 @@ import * as path from 'path';
 import { promises as fs, constants } from 'fs';
 import { CronJob } from 'cron';
 import { getPathOSBinary } from '../../../shared/utils/utils';
+import { ConfigService } from '@nestjs/config';
 
 const execAsync = promisify(exec);
 
@@ -25,6 +26,7 @@ export class BackupService {
     private readonly storageService: StorageService,
     private readonly cacheService: CacheService,
     private readonly schedulerRegistry: SchedulerRegistry,
+    private readonly config: ConfigService,
   ) {
     this.wwwroot = path.join(process.cwd(), 'wwwroot');
   }
@@ -82,6 +84,17 @@ export class BackupService {
       const declared = this.schedulerRegistry.getCronJobs().has(payload.name);
       if (declared && !update) {
         this.logger.log(`${payload.name} already exists, executing now`);
+
+        // Update last run time in cache before firing
+        const existingJobData = JSON.parse(
+          await this.cacheService.get(`backup:${payload.name}`, false),
+        );
+        existingJobData.lastRun = new Date().toISOString();
+        await this.cacheService.set(
+          `backup:${payload.name}`,
+          JSON.stringify(existingJobData),
+        );
+
         this.schedulerRegistry.getCronJobs().get(payload.name)?.fireOnTick();
 
         return {
@@ -103,7 +116,7 @@ export class BackupService {
         this.verifyBinaryPermissions('pg_dump'),
       ]);
 
-      const command = `${getPathOSBinary('pg_dump')} ${payload.zip ? '-F t' : ''} --dbname=${payload.connectionString} >> ${backupPath}`;
+      const command = `${getPathOSBinary('pg_dump')} ${payload.zip ? '-F t' : ''} --dbname="${payload.connectionString}" -f "${backupPath}"`;
 
       if (payload.continuos) {
         payload.path = backupPath;
@@ -144,7 +157,7 @@ export class BackupService {
 
       await this.verifyBinaryPermissions('pg_restore');
 
-      const command = `${getPathOSBinary('pg_restore')} -F t --no-privileges --no-owner --dbname=${payload.connectionString} ${backupPath}`;
+      const command = `${getPathOSBinary('pg_restore')} -F t --no-privileges --no-owner --dbname="${payload.connectionString}" "${backupPath}"`;
       const { stdout, stderr } = await execAsync(command);
 
       await this.saveLog('restore ✔', stdout, stderr, command);
@@ -164,51 +177,108 @@ export class BackupService {
     }
   }
 
-  async scheduleBackup(payload: BackupOptions): Promise<{ error?: Error }> {
+  async scheduleBackup(
+    payload: BackupOptions,
+    context?: string,
+  ): Promise<{ error?: Error }> {
     try {
       if (!payload.cron) {
         throw new Error('Schedule is required for continuous backup');
       }
+      const timeZone = this.config.get<string>('TIME_ZONE') || 'UTC';
 
-      const job = new CronJob(payload.cron, async () => {
-        try {
-          await execAsync(payload.command!);
-          await this.saveLog('scheduled backup ✔', '', '', payload.command!);
-        } catch (error) {
-          await this.saveLog(
-            'scheduled backup ❌',
-            '',
-            error.message,
-            payload.command!,
-          );
-        }
-      });
+      const job = new CronJob(
+        payload.cron,
+        async () => {
+          try {
+            this.logger.log(
+              `Executing scheduled backup: ${payload.name}`,
+              context,
+            );
+            const { stdout, stderr } = await execAsync(payload.command!);
 
+            // Update last run time in cache
+            const jobData = JSON.parse(
+              await this.cacheService.get(payload.key!, false),
+            );
+            jobData.lastRun = new Date().toISOString();
+            await this.cacheService.set(payload.key!, JSON.stringify(jobData));
+
+            await this.saveLog(
+              'scheduled backup ✔',
+              stdout,
+              stderr,
+              payload.command!,
+            );
+            this.logger.log(
+              `Scheduled backup completed: ${payload.name}`,
+              context,
+            );
+          } catch (error) {
+            this.logger.error(
+              `Scheduled backup failed: ${payload.name} - ${error.message}`,
+              context,
+            );
+            await this.saveLog(
+              'scheduled backup ❌',
+              '',
+              error.message,
+              payload.command!,
+            );
+          }
+        },
+        null,
+        true,
+        timeZone,
+      );
+
+      job.start();
       this.schedulerRegistry.addCronJob(payload.name, job);
+      this.logger.log(
+        `Backup job "${payload.name}" scheduled successfully`,
+        context,
+      );
       return {};
     } catch (error) {
+      this.logger.error(
+        `Failed to schedule backup job "${payload.name}": ${error.message}`,
+        context,
+      );
       return { error };
     }
   }
 
   async removeBackup(name: string): Promise<BackupResponse> {
     try {
-      const jobKey = name.split(':').pop();
-      const taskKey = `backup:${jobKey}`;
+      // Handle both formats: just the name or with backup: prefix
+      const jobName = name.startsWith('backup:') ? name.split(':').pop() : name;
+      const taskKey = `backup:${jobName}`;
 
-      this.schedulerRegistry.deleteCronJob(jobKey);
+      // Check if job exists in scheduler
+      const jobExists = this.schedulerRegistry.getCronJobs().has(jobName);
+
+      if (jobExists) {
+        this.schedulerRegistry.deleteCronJob(jobName);
+        this.logger.log(`Removed scheduled job: ${jobName}`);
+      }
+
+      // Remove from cache
       await this.cacheService.del(taskKey);
+      this.logger.log(`Removed backup configuration: ${taskKey}`);
 
       return {
         message: 'backup job removed successfully',
         status: 'success',
       };
     } catch (error) {
-      console.log(error);
+      this.logger.error(
+        `Failed to remove backup job ${name}: ${error.message}`,
+      );
 
       return {
         message: 'backup job not found',
         status: 'failed',
+        error: error.message,
       };
     }
   }
@@ -225,7 +295,7 @@ export class BackupService {
         name: backup.name,
         schedule: backup.schedule,
         status: cronJob ? 'active' : 'inactive',
-        lastRun: cronJob?.lastDate(),
+        lastRun: backup.lastRun || cronJob.lastExecution || null,
         nextRun: cronJob?.nextDate(),
         ...backup,
       });
@@ -235,11 +305,55 @@ export class BackupService {
   }
 
   async init(): Promise<void> {
-    const backups = await this.cacheService.keys('backup:*');
+    const context = 'BackupService.init';
+    try {
+      this.logger.log(
+        'Initializing backup service and restoring scheduled jobs...',
+        context,
+      );
+      const backups = await this.cacheService.keys('backup:*');
 
-    for (const backup of backups) {
-      const job = JSON.parse(await this.cacheService.get(backup, false));
-      await this.scheduleBackup(job);
+      if (backups.length === 0) {
+        this.logger.log('No scheduled backup jobs found to restore', context);
+        return;
+      }
+
+      this.logger.log(
+        `Found ${backups.length} backup jobs to restore`,
+        context,
+      );
+
+      for (const backup of backups) {
+        try {
+          const job = JSON.parse(await this.cacheService.get(backup, false));
+          this.logger.log(`Restoring backup job: ${job.name}`, context);
+
+          // Ensure the command has proper path formatting
+          if (job.command && job.path) {
+            // Regenerate command with current environment paths
+            const command = `${getPathOSBinary('pg_dump')} ${job.zip ? '-F t' : ''} --dbname="${job.connectionString}" -f "${job.path}"`;
+            job.command = command;
+          }
+
+          await this.scheduleBackup(job, context);
+          this.logger.log(
+            `Successfully restored backup job: ${job.name}`,
+            context,
+          );
+        } catch (error) {
+          this.logger.error(
+            `Failed to restore backup job from ${backup}: ${error.message}`,
+            context,
+          );
+        }
+      }
+
+      this.logger.log('Backup service initialization completed', context);
+    } catch (error) {
+      this.logger.error(
+        `Failed to initialize backup service: ${error.message}`,
+        context,
+      );
     }
   }
 

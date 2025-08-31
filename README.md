@@ -120,6 +120,16 @@ REDIS_URL=redis://localhost:6379
 
 # Database (for backups)
 DATABASE_URL=postgresql://user:password@localhost:5432/dbname
+
+# Timezone Configuration (for scheduled backups)
+TIME_ZONE=UTC
+# Supported timezone formats:
+# - UTC (default)
+# - America/Sao_Paulo
+# - America/New_York
+# - Europe/London
+# - Asia/Tokyo
+# See: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
 ```
 
 ## 🚀 Running the Application
@@ -206,6 +216,26 @@ curl -H "token: YOUR_API_TOKEN" https://your-app.railway.app/api/listTree
 
 ## 🔧 Configuration
 
+### Timezone Configuration
+
+The application supports timezone configuration for scheduled backup operations. Set the `TIME_ZONE` environment variable to specify your preferred timezone:
+
+```env
+# Examples of timezone configuration
+TIME_ZONE=UTC                    # Default - Coordinated Universal Time
+TIME_ZONE=America/New_York       # Eastern Time (US)
+TIME_ZONE=America/Sao_Paulo      # Brazil Time
+TIME_ZONE=Europe/London          # Greenwich Mean Time
+TIME_ZONE=Asia/Tokyo             # Japan Standard Time
+```
+
+**Important Notes**:
+
+- All scheduled backup jobs will use this timezone for cron execution
+- If not specified, defaults to UTC
+- Changes to timezone require application restart
+- Existing scheduled jobs will automatically use the new timezone after restart
+
 ### Docker Volumes
 
 ⚠️ **Important**: This template uses Docker Volumes for persistent storage. Changes to volume paths may affect file accessibility across deployments.
@@ -232,9 +262,18 @@ curl -X POST https://your-app.railway.app/api/backup \
     "folder": "production",
     "connectionString": "postgresql://user:pass@host:5432/db",
     "continuos": true,
-    "schedule": "0 2 * * *"
+    "cron": "0 2 * * *"
   }'
 ```
+
+**Note**: Scheduled backups use the timezone specified in the `TIME_ZONE` environment variable. The cron expression `"0 2 * * *"` means "every day at 2:00 AM" in the configured timezone.
+
+**Cron Expression Examples**:
+
+- `"0 2 * * *"` - Every day at 2:00 AM
+- `"0 */6 * * *"` - Every 6 hours
+- `"0 0 * * 1"` - Every Monday at midnight
+- `"30 14 * * 0"` - Every Sunday at 2:30 PM
 
 ### Listing Files
 
